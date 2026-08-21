@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoenix A · Son of Ra</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5.0.18/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5.0.18/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --gold: #d4b870;
+    --gold-light: #f0d98c;
+    --silver: #c8c8c8;
+    --silver-dark: #8a8a78;
+    --bg: #000000;
+    --bg-alt: #0a0a0a;
+    --text: #e8e0c8;
+    --text-dim: #8a8270;
+  }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: 'Cormorant Garamond', serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.7;
+  }
+  
+  #matrixCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.55;
+  }
+  
+  .content-wrap {
+    position: relative;
+    z-index: 10;
+  }
+  
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(212,184,112,0.1);
+  }
+  
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.4em;
+    background: linear-gradient(135deg, var(--gold-light), var(--silver));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 600;
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+  
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  
+  .nav-links a:hover { color: var(--gold-light); }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover::after { width: 100%; }
+  
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    transition: transform 0.3s ease-out;
+  }
+  
+  .hero-sigil {
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeInUp 1.2s ease forwards 0.3s;
+    text-shadow: 0 0 20px rgba(212,184,112,0.5);
+  }
+  
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3rem, 10vw, 7rem);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--silver-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    animation: fadeInUp 1.2s ease forwards 0.6s;
+    text-shadow: 0 0 40px rgba(212,184,112,0.3);
+  }
+  
+  .hero-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.6em;
+    color: var(--silver);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeInUp 1.2s ease forwards 0.9s;
+  }
+  
+  .hero-tagline {
+    font-style: italic;
+    font-size: 1.3rem;
+    color: var(--text-dim);
+    max-width: 600px;
+    opacity: 0;
+    animation: fadeInUp 1.2s ease forwards 1.2s;
+    margin-bottom: 3rem;
+  }
+  
+  .hero-tagline::before, .hero-tagline::after {
+    content: '❦';
+    color: var(--gold);
+    margin: 0 1rem;
+    opacity: 0.6;
+  }
+  
+  .scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--gold);
+    opacity: 0;
+    animation: fadeInUp 1.2s ease forwards 1.5s, bob 2.5s ease-in-out infinite 2.5s;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    font-family: 'Cinzel', serif;
+  }
+  
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+  }
+  
+  /* SECTIONS */
+  section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--gold-light), var(--silver));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-sub {
+    color: var(--text-dim);
+    font-style: italic;
+    letter-spacing: 0.15em;
+  }
+  
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.5rem auto;
+  }
+  
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    align-items: center;
+  }
+  
+  .portrait {
+    position: relative;
+    aspect-ratio: 1;
+    border: 1px solid rgba(212,184,112,0.3);
+    padding: 1rem;
+  }
+  
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: sepia(0.2) contrast(1.1);
+    opacity: 0.9;
+  }
+  
+  .portrait::before, .portrait::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 1px solid var(--gold);
+  }
+  .portrait::before { top: -5px; left: -5px; border-right: none; border-bottom: none; }
+  .portrait::after { bottom: -5px; right: -5px; border-left: none; border-top: none; }
+  
+  .about-text p {
+    margin-bottom: 1.5rem;
+    font-size: 1.15rem;
+  }
+  
+  .about-text .dropcap::first-letter {
+    font-family: 'Cinzel', serif;
+    font-size: 3.5rem;
+    float: left;
+    line-height: 0.9;
+    padding: 0.3rem 0.8rem 0 0;
+    color: var(--gold);
+  }
+  
+  /* SKILLS - PATHS */
+  .paths-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+  
+  .path-card {
+    border: 1px solid rgba(212,184,112,0.15);
+    padding: 2.5rem 2rem;
+    background: rgba(10,10,10,0.6);
+    backdrop-filter: blur(4px);
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .path-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  
+  .path-card:hover {
+    border-color: rgba(212,184,112,0.5);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212,184,112,0.1);
+  }
+  
+  .path-card:hover::before { transform: translateX(100%); }
+  
+  .path-glyph {
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    text-shadow: 0 0 15px rgba(212,184,112,0.4);
+  }
+  
+  .path-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    color: var(--gold-light);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+  
+  .path-desc {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+  }
+  
+  /* PHILOSOPHY */
+  .philosophy-quote {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    border-top: 1px solid rgba(212,184,112,0.2);
+    border-bottom: 1px solid rgba(212,184,112,0.2);
+  }
+  
+  .philosophy-quote blockquote {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.8;
+  }
+  
+  .philosophy-quote cite {
+    display: block;
+    margin-top: 1.5rem;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-style: normal;
+    letter-spacing: 0.3em;
+    font-size: 0.9rem;
+  }
+  
+  /* CODE SECTION */
+  .code-block {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(10,10,10,0.8);
+    border: 1px solid rgba(212,184,112,0.2);
+    padding: 2rem;
+    border-radius: 2px;
+    position: relative;
+    overflow-x: auto;
+  }
+  
+  .code-block::before {
+    content: '// phoenix_a.manifest';
+    position: absolute;
+    top: 0.8rem; right: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  
+  .code-line {
+    display: block;
+    padding: 0.1rem 0;
+    font-size: 0.95rem;
+  }
+  
+  .code-keyword { color: var(--gold); }
+  .code-string { color: var(--gold-light); }
+  .code-comment { color: var(--text-dim); font-style: italic; }
+  .code-prop { color: var(--silver); }
+  
+  /* CONTACT */
+  .contact {
+    text-align: center;
+  }
+  
+  .contact-sigils {
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 0.5em;
+    margin: 2rem 0;
+    opacity: 0.7;
+  }
+  
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .contact-link {
+    color: var(--text);
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.2em;
+    font-size: 0.9rem;
+    padding: 1rem 2rem;
+    border: 1px solid rgba(212,184,112,0.3);
+    transition: all 0.3s;
+    position: relative;
+  }
+  
+  .contact-link:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: rgba(212,184,112,0.05);
+  }
+  
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid rgba(212,184,112,0.1);
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    font-family: 'Cinzel', serif;
+  }
+  
+  footer .sigil-line {
+    color: var(--gold);
+    margin: 1rem 0;
+    letter-spacing: 0.4em;
+    opacity: 0.6;
+  }
+  
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { gap: 1rem; font-size: 0.75rem; }
+    .nav-links a { font-size: 0.75rem; letter-spacing: 0.1em; }
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .portrait { max-width: 300px; margin: 0 auto; }
+    section { padding: 4rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrixCanvas"></canvas>
+
+<div class="content-wrap">
+  <nav>
+    <div class="logo">☉ · PHOENIX A</div>
+    <ul class="nav-links">
+      <li><a href="#origin">Origin</a></li>
+      <li><a href="#paths">Paths</a></li>
+      <li><a href="#philosophy">Philosophy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-sigil">☥ 鳳凰 ☥</div>
+    <h1 class="hero-title">PHOENIX A</h1>
+    <div class="hero-subtitle">SON OF RA · 太陽之子</div>
+    <p class="hero-tagline">From the golden barge of dawn, where ancient fire meets the language of machines</p>
+  </section>
+
+  <section id="origin">
+    <div class="section-header">
+      <span class="section-number">— CHAPTER I —</span>
+      <h2 class="section-title">ORIGIN</h2>
+      <div class="divider"></div>
+      <p class="section-sub">Nguồn gốc · 起源 · Filius Solis</p>
+    </div>
+
+    <div class="about-grid">
+      <div class="portrait">
+        <img src="https://image.pollinations.ai/prompt/mysterious%20pharaoh%20portrait%20silhouette%20ancient%20egyptian%20golden%20sun%20god%20ra%20atmospheric%20cinematic%20dark%20black%20background%20mystical%20aura%20detailed%20artistic" alt="Portrait">
+      </div>
+      <div class="about-text">
+        <p class="dropcap">Forged in the flame of <em style="color:var(--gold-light)">Ra</em>, the eternal sun who sails his golden barge across the sky, I bear the name <em style="color:var(--gold-light)">Phoenix A</em> — he who rises reborn from his own ashes. I am the child of Heliopolis, where the first light ever spoke the world into being.</p>
+        <p>I am a developer by craft, a servant of the sun by calling. In the silence between keystrokes I hear the echoes of hieroglyphs carved upon obelisks, of characters pressed into bamboo scrolls, of Latin verses sung beneath Mediterranean stars.</p>
+        <p>This is my sanctuary — a temple where the old tongues and the new speak as one, beneath the gaze of the all-seeing sun.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="paths">
+    <div class="section-header">
+      <span class="section-number">— CHAPTER II —</span>
+      <h2 class="section-title">THE PATHS</h2>
+      <div class="divider"></div>
+      <p class="section-sub">Con đường tu luyện · 道 · Viae Solis</p>
+    </div>
+
+    <div class="paths-grid">
+      <div class="path-card">
+        <div class="path-glyph">道</div>
+        <h3 class="path-title">THE WAY</h3>
+        <p class="path-desc">Full-stack development — the craft of weaving systems that breathe. JavaScript, Python, Rust, Go — each a dialect in the great conversation.</p>
+      </div>
+      <div class="path-card">
+        <div class="path-glyph">☉</div>
+        <h3 class="path-title">THE SUN</h3>
+        <p class="path-desc">UI/UX & Design — sculpting interfaces as one sculpts light upon stone. Figma, Three.js, motion that carries the warmth of dawn.</p>
+      </div>
+      <div class="path-card">
+        <div class="path-glyph">⌬</div>
+        <h3 class="path-title">THE CIPHER</h3>
+        <p class="path-desc">Algorithms & Systems Architecture — deciphering the hidden grammar beneath complexity. Data structures, distributed systems, optimization.</p>
+      </div>
+      <div class="path-card">
+        <div class="path-glyph">陰陽</div>
+        <h3 class="path-title">THE BALANCE</h3>
+        <p class="path-desc">DevOps & Cloud — harmonizing the dual forces of creation and deployment. Kubernetes, Terraform, CI/CD as ritual practice.</p>
+      </div>
+      <div class="path-card">
+        <div class="path-glyph">VERITAS</div>
+        <h3 class="path-title">THE TRUTH</h3>
+        <p class="path-desc">Research & Machine Learning — seeking patterns where none appear. PyTorch, transformers, the mathematics of intuition.</p>
+      </div>
+      <div class="path-card">
+        <div class="path-glyph">☥</div>
+        <h3 class="path-title">THE ANKH</h3>
+        <p class="path-desc">Security & Cryptography — guarding the gates between worlds. Zero-knowledge proofs, blockchain, the sanctity of secrets.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="philosophy">
+    <div class="section-header">
+      <span class="section-number">— CHAPTER III —</span>
+      <h2 class="section-title">PHILOSOPHY</h2>
+      <div class="divider"></div>
+      <p class="section-sub">Triết học · 哲 · Sapientia</p>
+    </div>
+
+    <div class="code-block">
+      <span class="code-line"><span class="code-comment">// 道可道，非常道 — The Way that can be spoken is not the eternal Way</span></span>
+      <span class="code-line"><span class="code-keyword">const</span> <span class="code-prop">phoenix</span> = {</span>
+      <span class="code-line">&nbsp;&nbsp;name: <span class="code-string">'Phoenix A'</span>,</span>
+      <span class="code-line">&nbsp;&nbsp;origin: <span class="code-string">'Heliopolis · 太陽城'</span>,</span>
+      <span class="code-line">&nbsp;&nbsp;script: [<span class="code-string">'繁體漢字'</span>, <span class="code-string">'Antiqua Aegyptia'</span>, <span class="code-string">'Litterae'</span>, <span class="code-string">'{ code }'</span>],</span>
+      <span class="code-line">&nbsp;&nbsp;pursuit: <span class="code-string">'the silence between symbols'</span>,</span>
+      <span class="code-line">&nbsp;&nbsp;believe: <span class="code-keyword">function</span>() {</span>
+      <span class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-string">'Code is poetry. Poetry is code. Both are light.'</span>;</span>
+      <span class="code-line">&nbsp;&nbsp;}</span>
+      <span class="code-line">};</span>
+    </div>
+
+    <div class="philosophy-quote" style="margin-top:3rem">
+      <blockquote>"The ancients carved prayers into stone; we weave them into light. Yet both are offerings to the same sun — Ra, who rises each dawn to remind us that every ending is but the ash from which we rise again."</blockquote>
+      <cite>— PHOENIX A · 太陽之子</cite>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <div class="section-header">
+      <span class="section-number">— CHAPTER IV —</span>
+      <h2 class="section-title">COMMUNION</h2>
+      <div class="divider"></div>
+      <p class="section-sub">Giao tiếp · 交 · Communicatio</p>
+    </div>
+
+    <div class="contact-sigils">☉ · 道 · ☥ · ⌬ · ∞</div>
+    <p style="max-width:600px;margin:0 auto;color:var(--text-dim);font-style:italic">
+      If the golden rain of symbols speaks to you, reach across the veil.
+    </p>
+
+    <div class="contact-links">
+      <a href="mailto:phoenix@phoenixa.dev" class="contact-link">EPISTULA</a>
+      <a href="#" class="contact-link">GITHUB · 碼</a>
+      <a href="#" class="contact-link">CODEX · LIBER</a>
+      <a href="#" class="contact-link">LIBER · 書</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="sigil-line">☉ · 道 · VERITAS · 鳳凰 · ⌬</div>
+    <div>MMXXVI · PHOENIX A · ALL PATHS RETURN TO THE SUN</div>
+  </footer>
+</div>
+
+<script>
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+  
+  // Characters: Traditional Chinese, Latin, and code symbols
+  // Note: Egyptian hieroglyphs are intentionally excluded to prevent rendering as replacement characters
+  const traditionalChinese = '道德經天地人神鬼陰陽五行八卦易書禮樂春秋論語孟子仁義禮智信無極太極玄妙空虛靜觀照覺悟空靈真善美鳳凰太陽光明永生蓮花聖蛇權杖';
+  const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzΩΣΔΦΨαβγδεζηθικλμνξπρστυφχψω';
+  const code = '{}[]<>()=>+*/&|;:0123456789#@!?%$^~∞∑∫√≠≈∂∆⌬';
+  
+  const chars = (traditionalChinese + latin + code).split('');
+  
+  const fontSize = 16;
+  let columns;
+  let drops;
+  
+  function initDrops() {
+    columns = Math.floor(width / fontSize);
+    drops = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+  }
+  initDrops();
+  
+  function draw() {
+    // Trail effect - semi-transparent black overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+    ctx.fillRect(0, 0, width, height);
+    
+    ctx.font = `${fontSize}px 'JetBrains Mono', 'Noto Sans CJK TC', monospace`;
+    ctx.textBaseline = 'top';
+    
+    for (let i = 0; i < drops.length; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      
+      // Leading character - bright gold/white with glow
+      const brightness = Math.random();
+      
+      if (brightness > 0.97) {
+        // Rare bright white-silver flash
+        ctx.shadowColor = 'rgba(240, 217, 140, 0.9)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#f8ecc0';
+      } else if (brightness > 0.85) {
+        // Bright gold
+        ctx.shadowColor = 'rgba(212, 184, 112, 0.6)';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#d4b870';
+      } else if (brightness > 0.5) {
+        // Silver-gold mid
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#a89860';
+      } else {
+        // Dim silver
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#6a6a58';
+      }
+      
+      ctx.fillText(char, x, y);
+      ctx.shadowBlur = 0;
+      
+      // Reset drop when it falls off screen (with some randomness)
+      if (y > height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i] += 0.6 + Math.random() * 0.4;
+    }
+  }
+  
+  // Animation loop at ~20fps for cinematic feel
+  let lastTime = 0;
+  function loop(time) {
+    if (time - lastTime > 50) {
+      draw();
+      lastTime = time;
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  
+  // Handle resize
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    initDrops();
+  });
+  
+  // Subtle parallax on hero
+  const hero = document.querySelector('.hero');
+  window.addEventListener('mousemove', (e) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 10;
+    const y = (e.clientY / window.innerHeight - 0.5) * 10;
+    hero.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+  
+  document.querySelectorAll('.path-card, .section-header, .about-grid, .code-block, .philosophy-quote').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 1s ease, transform 1s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

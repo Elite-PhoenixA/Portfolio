@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>R3D//H4T — Cyber Security · Red Team · Hacking</title>
+<meta name="description" content="Red Hat Security — đội mũ đỏ chuyên kiểm thử xâm nhập, săn zero-day và mô phỏng đối thủ thực chiến." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#04070d; --bg2:#070b15; --panel:#0a1120;
+  --red:#ff2b3a; --cyan:#00e5ff; --green:#00ff9c; --mag:#ff2bd6; --amber:#ffb020;
+  --txt:#c9d6e6; --dim:#62748a; --line:rgba(120,160,200,.12);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Rajdhani',sans-serif;
+  --body:'Be Vietnam Pro',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body);color:var(--txt);background:var(--bg);overflow-x:hidden;
+  background-image:
+    radial-gradient(1100px 600px at 82% -8%, rgba(255,43,58,.10), transparent 60%),
+    radial-gradient(900px 520px at 6% 108%, rgba(0,229,255,.07), transparent 60%),
+    radial-gradient(700px 500px at 50% 50%, rgba(255,43,214,.05), transparent 70%);
+}
+body.loading{overflow:hidden}
+::selection{background:var(--red);color:#fff}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* grid + scanline overlays */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 80%);
+          mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 80%);
+}
+.scanlines{position:fixed;inset:0;z-index:9000;pointer-events:none;opacity:.22;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.55) 2px 3px);
+  mix-blend-mode:multiply;animation:flick 6s steps(60) infinite}
+@keyframes flick{0%,97%{opacity:.22}98%{opacity:.12}99%{opacity:.3}100%{opacity:.22}}
+
+/* custom cursor */
+.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;z-index:9998;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%);display:none}
+.cursor-dot{width:6px;height:6px;background:var(--red);box-shadow:0 0 12px var(--red)}
+.cursor-ring{width:34px;height:34px;border:1px solid var(--cyan);transition:width .2s,height .2s,background .2s,border-color .2s}
+.cursor-ring.big{width:60px;height:60px;border-color:var(--mag);background:rgba(255,43,214,.08)}
+body.has-cursor,body.has-cursor *{cursor:none}
+@media (pointer:fine){.cursor-dot,.cursor-ring{display:block}}
+
+/* ============ BOOT ============ */
+#boot{position:fixed;inset:0;z-index:9999;background:#02040a;display:flex;flex-direction:column;justify-content:center;
+  padding:6vw;font-family:var(--mono);color:var(--green);font-size:clamp(.78rem,1.6vw,1rem);transition:opacity .6s,visibility .6s}
+#boot.done{opacity:0;visibility:hidden}
+#boot .b-logo{font-family:var(--disp);font-weight:700;font-size:clamp(1.4rem,4vw,2.4rem);letter-spacing:.18em;color:#fff;margin-bottom:1.4rem}
+#boot .b-logo span{color:var(--red)}
+#bootLog{line-height:1.7;white-space:pre-wrap;min-height:9em}
+#bootLog .ok{color:var(--cyan)}
+#bootLog .warn{color:var(--amber)}
+.bar{margin-top:1.6rem;width:min(420px,70vw);height:6px;border:1px solid rgba(0,255,156,.4);position:relative}
+.bar i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 14px var(--green);transition:width .12s linear}
+
+/* ============ NAV ============ */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;
+  padding:18px clamp(18px,4vw,52px);transition:background .3s,backdrop-filter .3s,border-color .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(4,7,13,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--disp);font-weight:700;font-size:1.5rem;letter-spacing:.12em;color:#fff;position:relative}
+.logo span{color:var(--red)}
+.logo .logo-dot{color:var(--cyan);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.logo:hover{animation:glitchLogo .4s steps(2) 1}
+@keyframes glitchLogo{25%{transform:translate(2px,-1px);text-shadow:-2px 0 var(--cyan),2px 0 var(--mag)}75%{transform:translate(-2px,1px);text-shadow:2px 0 var(--red),-2px 0 var(--cyan)}}
+.nav-links{display:flex;gap:30px}
+.nav-links a{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;color:var(--dim);position:relative;padding:6px 0;transition:color .2s}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--red);box-shadow:0 0 8px var(--red);transition:width .25s}
+.nav-links a:hover,.nav-links a.active{color:#fff}
+.nav-links a:hover::after,.nav-links a.active::after{width:100%}
+.nav-status{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;color:var(--green);display:flex;align-items:center;gap:8px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(0,255,156,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,255,156,.6)}70%{box-shadow:0 0 0 9px rgba(0,255,156,0)}100%{box-shadow:0 0 0 0 rgba(0,255,156,0)}}
+.burger{display:none;background:none;border:1px solid var(--line);width:42px;height:38px;flex-direction:column;gap:5px;align-items:center;justify-content:center}
+.burger span{width:20px;height:2px;background:var(--cyan);transition:.3s}
+.burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ============ HERO ============ */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding:120px clamp(18px,5vw,80px) 60px}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%}
+#rain{z-index:2}
+#lightning{z-index:3}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;z-index:4;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none}
+
+.moon{position:absolute;top:9%;right:7%;width:clamp(150px,22vw,300px);aspect-ratio:1;z-index:1;will-change:transform}
+.moon-core{width:100%;height:100%;border-radius:50%;position:relative;animation:float 7s ease-in-out infinite;
+  background:
+    radial-gradient(circle at 32% 30%, #f3f7ff 0%, #aeb9d6 38%, #5b6488 70%, #20243a 100%);
+  box-shadow:0 0 60px rgba(120,180,255,.35),0 0 140px rgba(0,229,255,.18),inset -22px -16px 50px rgba(0,0,0,.6)}
+.moon-core::before,.moon-core::after{content:"";position:absolute;border-radius:50%;background:rgba(40,46,72,.55);box-shadow:inset 2px 2px 6px rgba(0,0,0,.5)}
+.moon-core::before{width:24%;height:24%;top:24%;left:30%}
+.moon-core::after{width:16%;height:16%;top:55%;left:54%}
+.moon-halo{position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(circle,rgba(0,229,255,.12),transparent 65%);animation:float 7s ease-in-out infinite reverse}
+@keyframes float{50%{transform:translateY(-16px)}}
+
+.hero-content{position:relative;z-index:5;max-width:880px}
+.hero-tag{font-family:var(--mono);font-size:clamp(.7rem,1.4vw,.9rem);color:var(--cyan);letter-spacing:.18em;margin-bottom:1.2rem;opacity:0;animation:rise .8s .2s forwards}
+.hero-tag .blink{color:var(--green)}
+.glitch{font-family:var(--disp);font-weight:700;line-height:.92;letter-spacing:.02em;
+  font-size:clamp(3.4rem,13vw,9.5rem);color:#fff;position:relative;display:inline-block;
+  text-shadow:0 0 10px rgba(255,43,58,.85),0 0 34px rgba(255,43,58,.5),0 0 90px rgba(255,43,58,.28);
+  opacity:0;animation:rise .8s .35s forwards}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;opacity:.85}
+.glitch::before{color:var(--cyan);text-shadow:none;animation:gl1 3.4s infinite steps(1)}
+.glitch::after{color:var(--mag);text-shadow:none;animation:gl2 2.7s infinite steps(1)}
+@keyframes gl1{0%,100%{clip-path:inset(0 0 92% 0);transform:translate(-3px,-2px)}20%{clip-path:inset(28% 0 50% 0);transform:translate(3px,1px)}40%{clip-path:inset(62% 0 18% 0);transform:translate(-2px,2px)}60%{clip-path:inset(12% 0 74% 0);transform:translate(2px,-1px)}80%{clip-path:inset(82% 0 4% 0);transform:translate(-3px,2px)}}
+@keyframes gl2{0%,100%{clip-path:inset(88% 0 2% 0);transform:translate(3px,2px)}25%{clip-path:inset(40% 0 40% 0);transform:translate(-3px,-1px)}50%{clip-path:inset(8% 0 80% 0);transform:translate(2px,2px)}75%{clip-path:inset(70% 0 12% 0);transform:translate(-2px,-2px)}}
+.hero-sub{display:flex;align-items:center;gap:16px;margin:1.4rem 0 1.3rem;opacity:0;animation:rise .8s .5s forwards}
+.hero-sub .line{width:54px;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
+.hero-sub p{font-family:var(--mono);font-size:clamp(.72rem,1.5vw,.95rem);letter-spacing:.16em;color:var(--txt)}
+.hero-sub em{color:var(--mag);font-style:normal}
+.hero-desc{max-width:560px;color:var(--dim);font-size:1.02rem;line-height:1.7;margin-bottom:2rem;opacity:0;animation:rise .8s .65s forwards}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;opacity:0;animation:rise .8s .8s forwards}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+.btn{font-family:var(--mono);font-size:.82rem;letter-spacing:.12em;padding:14px 26px;position:relative;display:inline-flex;align-items:center;gap:10px;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));transition:.25s}
+.btn-red{background:var(--red);color:#06121a;font-weight:700;box-shadow:0 0 22px rgba(255,43,58,.45)}
+.btn-red:hover{background:#ff5562;box-shadow:0 0 36px rgba(255,43,58,.8);transform:translateY(-2px)}
+.btn-ghost{border:1px solid var(--cyan);color:var(--cyan);background:rgba(0,229,255,.04)}
+.btn-ghost:hover{background:rgba(0,229,255,.14);box-shadow:0 0 24px rgba(0,229,255,.4);transform:translateY(-2px)}
+
+.hero-stats{position:absolute;left:clamp(18px,5vw,80px);bottom:42px;z-index:5;display:flex;gap:clamp(22px,4vw,56px);flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat-num{font-family:var(--disp);font-weight:700;font-size:clamp(1.8rem,4vw,2.8rem);color:#fff;line-height:1}
+.stat .stat-plus{display:inline}
+.stat-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;color:var(--dim)}
+.stat:nth-child(1) .stat-num{color:var(--red);text-shadow:0 0 16px rgba(255,43,58,.5)}
+.stat:nth-child(2) .stat-num{color:var(--cyan);text-shadow:0 0 16px rgba(0,229,255,.5)}
+.stat:nth-child(3) .stat-num{color:var(--green);text-shadow:0 0 16px rgba(0,255,156,.5)}
+.stat:nth-child(4) .stat-num{color:var(--mag);text-shadow:0 0 16px rgba(255,43,214,.5)}
+
+.side-note{position:absolute;right:22px;top:50%;transform:translateY(-50%);z-index:5;writing-mode:vertical-rl;
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;color:var(--dim)}
+.side-note b{color:var(--cyan)}
+.scroll-hint{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:5;font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll-hint i{width:1px;height:34px;background:linear-gradient(var(--cyan),transparent);animation:drop 1.6s infinite}
+@keyframes drop{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ============ TICKER ============ */
+.ticker{position:relative;z-index:5;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,43,58,.04);overflow:hidden;white-space:nowrap}
+.ticker-track{display:inline-flex;gap:0;animation:scroll 26s linear infinite}
+.ticker-track span{font-family:var(--mono);font-size:.8rem;letter-spacing:.18em;color:var(--txt);padding:14px 0}
+.ticker-track span b{color:var(--red);margin:0 22px}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* ============ SECTIONS ============ */
+section{position:relative;z-index:5;padding:clamp(70px,10vw,130px) clamp(18px,5vw,80px)}
+.sec-head{display:flex;align-items:flex-end;gap:22px;margin-bottom:54px}
+.sec-index{font-family:var(--disp);font-weight:700;font-size:clamp(2.6rem,7vw,5rem);line-height:.8;color:transparent;-webkit-text-stroke:1px rgba(0,229,255,.4)}
+.sec-tag{font-family:var(--mono);font-size:.74rem;letter-spacing:.2em;color:var(--red);margin-bottom:8px}
+.sec-head h2{font-family:var(--disp);font-weight:700;font-size:clamp(1.7rem,4.4vw,3rem);letter-spacing:.01em;color:#fff;line-height:1.05}
+.hl-red{color:var(--red);text-shadow:0 0 18px rgba(255,43,58,.5)}
+.hl-cyan{color:var(--cyan)}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease var(--d,0s),transform .7s ease var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+
+/* ABOUT */
+.about-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(30px,5vw,70px);align-items:center}
+.globe-wrap{position:relative;aspect-ratio:1/1;max-width:480px;margin:0 auto;width:100%}
+.globe-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.globe-ring{position:absolute;inset:7%;border:1px dashed rgba(0,229,255,.25);border-radius:50%;animation:spin 44s linear infinite}
+.globe-ring2{position:absolute;inset:14%;border:1px solid rgba(255,43,214,.18);border-radius:50%;transform:rotate(20deg);animation:spin 30s linear infinite reverse}
+.orbit{position:absolute;inset:1%;animation:spin 13s linear infinite}
+.orbit i{position:absolute;top:-4px;left:50%;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.globe-label{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);font-size:.66rem;letter-spacing:.18em;color:var(--cyan);white-space:nowrap}
+.about-text p{color:var(--dim);line-height:1.8;margin-bottom:1.4rem;font-size:1.02rem}
+.about-text p b{color:var(--txt)}
+.about-list{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:1.6rem}
+.about-list li{display:flex;gap:14px;align-items:flex-start;font-size:.96rem;color:var(--txt)}
+.about-list .hex{font-family:var(--mono);color:var(--green);font-size:.8rem;flex-shrink:0;margin-top:2px}
+.about-quote{font-family:var(--mono);font-size:.84rem;color:var(--mag);border-left:2px solid var(--mag);padding-left:14px;line-height:1.6}
+
+/* OPS / CAPABILITIES */
+.ops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.op{position:relative;background:linear-gradient(160deg,rgba(10,17,32,.9),rgba(7,11,21,.7));border:1px solid var(--line);padding:30px 26px;overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));transition:transform .3s,border-color .3s,box-shadow .3s}
+.op.feat{grid-column:span 2}
+.op::before,.op::after{content:"";position:absolute;width:14px;height:14px;transition:border-color .3s}
+.op::before{top:8px;left:8px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan)}
+.op::after{bottom:8px;right:8px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan)}
+.op .sweep{position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(0,229,255,.08),transparent);transition:left .6s}
+.op:hover{transform:translateY(-6px);border-color:rgba(255,43,58,.5);box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 30px rgba(255,43,58,.12)}
+.op:hover::before,.op:hover::after{border-color:var(--red)}
+.op:hover .sweep{left:130%}
+.op-icon{width:46px;height:46px;display:grid;place-items:center;border:1px solid var(--line);margin-bottom:18px;color:var(--cyan)}
+.op-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6}
+.op h3{font-family:var(--disp);font-weight:600;font-size:1.25rem;letter-spacing:.04em;color:#fff;margin-bottom:10px}
+.op p{color:var(--dim);font-size:.92rem;line-height:1.65}
+.op-code{position:absolute;top:18px;right:20px;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:var(--dim)}
+.op.feat h3{font-size:1.6rem}
+.op.feat .op-icon{color:var(--red)}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.member{position:relative;background:var(--panel);border:1px solid var(--line);overflow:hidden;transition:transform .3s,box-shadow .3s,border-color .3s;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%)}
+.member:hover{transform:translateY(-6px);border-color:var(--cyan);box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 28px rgba(0,229,255,.18)}
+.member-img{position:relative;aspect-ratio:1/1;overflow:hidden;background:#0a0f1a}
+.member-img img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05) contrast(1.05);transition:transform .5s,filter .3s}
+.member:hover .member-img img{transform:scale(1.06)}
+.member-img::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.35) 2px 3px);opacity:.5;mix-blend-mode:multiply}
+.member-scan{position:absolute;left:0;right:0;top:-30%;height:30%;background:linear-gradient(rgba(0,229,255,0),rgba(0,229,255,.35),rgba(0,229,255,0));opacity:0}
+.member:hover .member-scan{opacity:1;animation:scan 1.1s linear infinite}
+@keyframes scan{to{top:120%}}
+.member-id{position:absolute;top:10px;left:10px;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--green);background:rgba(0,0,0,.5);padding:3px 7px;border:1px solid rgba(0,255,156,.4)}
+.member-img.no-img{display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#13203a,#070b15)}
+.member-img.no-img::before{content:attr(data-initials);font-family:var(--disp);font-weight:700;font-size:3.4rem;color:var(--cyan);text-shadow:0 0 24px rgba(0,229,255,.6);z-index:2}
+.member-info{padding:18px 18px 22px}
+.member-info h3{font-family:var(--disp);font-weight:700;font-size:1.4rem;letter-spacing:.06em;color:#fff}
+.member-role{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--red);margin:2px 0 12px}
+.member-tags{display:flex;flex-wrap:wrap;gap:6px}
+.member-tags span{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);padding:3px 8px}
+.member:hover .member-tags span{border-color:rgba(0,229,255,.3);color:var(--txt)}
+
+/* TERMINAL */
+#terminal{background:linear-gradient(180deg,var(--bg),var(--bg2));border-top:1px solid rgba(255,43,58,.3);box-shadow:inset 0 1px 30px rgba(255,43,58,.06)}
+.term-wrap{max-width:920px;margin:0 auto;border:1px solid var(--line);background:#03060c;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px rgba(0,229,255,.06);
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+.term-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#0a0f1a;border-bottom:1px solid var(--line)}
+.tdot{width:11px;height:11px;border-radius:50%}
+.tdot.r{background:#ff5f56}.tdot.y{background:#ffbd2e}.tdot.g{background:#27c93f}
+.term-title{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:var(--dim);margin-left:10px}
+.term{height:380px;overflow-y:auto;padding:18px 20px;font-family:var(--mono);font-size:.84rem;line-height:1.65}
+.term::-webkit-scrollbar{width:8px}.term::-webkit-scrollbar-thumb{background:rgba(0,229,255,.3)}
+.t-line{white-space:pre-wrap;word-break:break-word}
+.t-sys{color:var(--cyan);opacity:.85}
+.t-out{color:var(--txt)}
+.t-ok{color:var(--green)}
+.t-err{color:var(--red)}
+.t-cmd{color:var(--dim)}
+.t-cmd b{color:var(--mag)}
+.t-prompt{color:var(--green)}
+.term-line{display:flex;align-items:center;gap:8px;margin-top:4px}
+.term-line .prompt{color:var(--green);flex-shrink:0}
+#termIn{flex:1;background:none;border:none;outline:none;color:#fff;font-family:var(--mono);font-size:.84rem;caret-color:var(--green)}
+#termIn:disabled{opacity:.4}
+.term-hint{max-width:920px;margin:14px auto 0;font-family:var(--mono);font-size:.7rem;color:var(--dim);text-align:center}
+.term-hint b{color:var(--cyan)}
+
+/* FOOTER */
+footer{position:relative;z-index:5;padding:60px clamp(18px,5vw,80px) 30px;border-top:1px solid var(--line);background:var(--bg2)}
+.foot-top{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;margin-bottom:34px}
+.foot-logo{font-family:var(--disp);font-weight:700;font-size:clamp(2.4rem,8vw,5rem);letter-spacing:.06em;color:transparent;-webkit-text-stroke:1px rgba(255,43,58,.5);line-height:.9}
+.foot-logo span{-webkit-text-stroke:1px rgba(0,229,255,.5)}
+.foot-links{display:flex;gap:26px;font-family:var(--mono);font-size:.76rem;letter-spacing:.1em;color:var(--dim)}
+.foot-links a:hover{color:var(--cyan)}
+.foot-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:var(--dim);border-top:1px solid var(--line);padding-top:18px}
+.foot-bottom b{color:var(--green)}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:980px){
+  .about-grid{grid-template-columns:1fr}
+  .ops-grid{grid-template-columns:repeat(2,1fr)}
+  .op.feat{grid-column:span 2}
+  .team-grid{grid-template-columns:repeat(2,1fr)}
+  .side-note{display:none}
+}
+@media(max-width:680px){
+  .nav-links{position:fixed;top:64px;right:0;left:0;flex-direction:column;gap:0;background:rgba(4,7,13,.97);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);padding:0 24px;max-height:0;overflow:hidden;transition:max-height .35s}
+  .nav-links.open{max-height:340px;padding:14px 24px}
+  .nav-links a{padding:13px 0;border-bottom:1px solid var(--line)}
+  .nav-status{display:none}
+  .burger{display:flex}
+  .ops-grid{grid-template-columns:1fr}
+  .op.feat{grid-column:span 1}
+  .team-grid{grid-template-columns:1fr}
+  .hero-stats{position:static;margin-top:34px}
+  .moon{opacity:.5;top:6%;right:-4%}
+}
+</style>
+</head>
+<body class="loading">
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="b-logo">R3D<span>//</span>H4T<span style="color:var(--cyan)">_</span></div>
+  <div id="bootLog"></div>
+  <div class="bar"><i id="bootBar"></i></div>
+</div>
+
+<!-- CURSOR -->
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
+<div class="scanlines"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="logo" href="#home">R3D<span>//</span>H4T<span class="logo-dot">_</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="#home" class="active">TRANG CHỦ</a>
+    <a href="#about">GIỚI THIỆU</a>
+    <a href="#ops">NĂNG LỰC</a>
+    <a href="#team">ĐỘI NGŨ</a>
+    <a href="#terminal">TERMINAL</a>
+  </div>
+  <div class="nav-status"><span class="pulse"></span>HỆ THỐNG: ONLINE</div>
+  <button class="burger" id="burger" aria-label="menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="home">
+  <canvas id="rain"></canvas>
+  <canvas id="lightning"></canvas>
+  <div class="moon" id="moon"><div class="moon-halo"></div><div class="moon-core"></div></div>
+
+  <div class="hero-content">
+    <p class="hero-tag mono">// RED HAT SECURITY DIVISION — EST.2019 <span class="blink">█</span></p>
+    <h1 class="glitch" data-text="RED HAT">RED HAT</h1>
+    <div class="hero-sub"><span class="line"></span><p>CYBER SECURITY <em>//</em> RED TEAM <em>//</em> HACKING</p></div>
+    <p class="hero-desc">Chúng tôi là những chiếc <b style="color:var(--red)">mũ đỏ</b> — tấn công để bảo vệ. Chuyên gia kiểm thử xâm nhập, săn lỗ hổng zero-day và mô phỏng đối thủ thực chiến trên hệ thống của bạn, trước khi kẻ xấu làm điều đó.</p>
+    <div class="hero-cta">
+      <a class="btn btn-red" href="#terminal">TRUY CẬP TERMINAL ▸</a>
+      <a class="btn btn-ghost" href="#team">GẶP ĐỘI NGŨ</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num" data-count="500">0</span><span class="stat-label">CUỘC PENTEST</span></div>
+    <div class="stat"><span class="stat-num" data-count="1240">0</span><span class="stat-label">LỖ HỔNG PHÁT HIỆN</span></div>
+    <div class="stat"><span class="stat-num" data-count="99.9" data-dec="1">0</span><span class="stat-label">% TỶ LỆ THÀNH CÔNG</span></div>
+    <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">GIÁM SÁT ĐE DỌA</span></div>
+  </div>
+
+  <div class="side-note">TỌA ĐỘ <b>21.0285°N 105.8542°E</b> // HÀ NỘI — SÀI GÒN</div>
+  <a class="scroll-hint" href="#about">CUỘN XUỐNG<i></i></a>
+</header>
+
+<!-- TICKER -->
+<div class="ticker"><div class="ticker-track" id="tick"></div></div>
+
+<main>
+<!-- ABOUT -->
+<section id="about">
+  <div class="sec-head reveal">
+    <span class="sec-index">01</span>
+    <div><p class="sec-tag">// GIỚI THIỆU</p><h2>CHÚNG TÔI LÀ <span class="hl-red">AI</span>?</h2></div>
+  </div>
+  <div class="about-grid">
+    <div class="globe-wrap reveal">
+      <canvas id="globe"></canvas>
+      <div class="globe-ring"></div>
+      <div class="globe-ring2"></div>
+      <div class="orbit"><i></i></div>
+      <div class="globe-label mono">GLOBAL OPS — 32 QUỐC GIA</div>
+    </div>
+    <div class="about-text reveal" style="--d:.12s">
+      <p><b>Red Hat Security</b> là tập hợp những hacker mũ đỏ, kỹ sư bảo mật và nhà nghiên cứu lỗ hổng. Chúng tôi tư duy như kẻ tấn công để xây dựng hàng phòng thủ không thể bẻ khóa — từ hạ tầng doanh nghiệp đến hệ thống tài chính, IoT và đám mây.</p>
+      <p>Triết lý của chúng tôi đơn giản: <b>bạn không thể bảo vệ thứ mình không hiểu</b>. Vì vậy chúng tôi phá nó trước — một cách hợp pháp, có kiểm soát và đầy tính nghệ thuật.</p>
+      <ul class="about-list">
+        <li><span class="hex">0x01</span><span>Tấn công chủ động — mô phỏng APT &amp; adversary thực chiến.</span></li>
+        <li><span class="hex">0x02</span><span>Phòng thủ chiều sâu — hardening, detection &amp; response.</span></li>
+        <li><span class="hex">0x03</span><span>Nghiên cứu zero-day &amp; phát triển exploit tùy biến.</span></li>
+        <li><span class="hex">0x04</span><span>Minh bạch tuyệt đối — báo cáo rõ ràng, có thể hành động.</span></li>
+      </ul>
+      <p class="about-quote">"Không có hệ thống nào an toàn tuyệt đối — chỉ có những kẻ chưa bị phát hiện."</p>
+    </div>
+  </div>
+</section>
+
+<!-- OPS -->
+<section id="ops">
+  <div class="sec-head reveal">
+    <span class="sec-index">02</span>
+    <div><p class="sec-tag">// NĂNG LỰC TÁC CHIẾN</p><h2>KHO VŨ KHÍ <span class="hl-cyan">CYBER</span></h2></div>
+  </div>
+  <div class="ops-grid">
+    <article class="op feat reveal">
+      <span class="sweep"></span><span class="op-code">SYS.01</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg></div>
+      <h3>KIỂM THỬ XÂM NHẬP</h3>
+      <p>Pentest toàn diện trên web, API, mobile, mạng nội bộ và Active Directory. Chúng tôi đi từ recon đến post-exploitation, chứng minh tác động thực tế và đưa lộ trình vá lỗi ưu tiên theo rủi ro kinh doanh.</p>
+    </article>
+    <article class="op reveal" style="--d:.08s">
+      <span class="sweep"></span><span class="op-code">SYS.02</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><path d="M9 21h6M10 17v4M14 17v4"/></svg></div>
+      <h3>RED TEAM OPS</h3>
+      <p>Mô phỏng đối thủ đầy đủ: social engineering, C2 ẩn danh, lateral movement và đạt mục tiêu mà không bị SOC phát hiện.</p>
+    </article>
+    <article class="op reveal" style="--d:.12s">
+      <span class="sweep"></span><span class="op-code">SYS.03</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><rect x="8" y="6" width="8" height="12" rx="4"/><path d="M12 2v4M9 9H6M15 9h3M9 15H6M15 15h3M12 18v4"/></svg></div>
+      <h3>PHÂN TÍCH MÃ ĐỘC</h3>
+      <p>Reverse engineering malware, unpacking, phân tích hành vi và xây dựng chỉ báo xâm nhập (IOC) cho đội blue team.</p>
+    </article>
+    <article class="op reveal" style="--d:.04s">
+      <span class="sweep"></span><span class="op-code">SYS.04</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg></div>
+      <h3>NGHIÊN CỨU ZERO-DAY</h3>
+      <p>Fuzzing, audit mã nguồn và khai thác các lỗ hổng chưa từng được công bố — responsibly disclosed.</p>
+    </article>
+    <article class="op reveal" style="--d:.08s">
+      <span class="sweep"></span><span class="op-code">SYS.05</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <h3>OSINT &amp; ĐIỀU TRA SỐ</h3>
+      <p>Thu thập tình báo nguồn mở, theo dõi dấu vết số và điều tra sự cố sau xâm nhập.</p>
+    </article>
+    <article class="op reveal" style="--d:.12s">
+      <span class="sweep"></span><span class="op-code">SYS.06</span>
+      <div class="op-icon"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>ĐÀO TẠO &amp; ỨNG CỨU</h3>
+      <p>Workshop offensive/defensive, CTF nội bộ và đội ứng cứu sự cố 24/7 khi bạn bị tấn công thật.</p>
+    </article>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="sec-head reveal">
+    <span class="sec-index">03</span>
+    <div><p class="sec-tag">// ĐỘI NGŨ</p><h2>NHỮNG <span class="hl-red">BÓNG MA</span> TRONG MẠNG</h2></div>
+  </div>
+  <div class="team-grid">
+    <article class="member reveal">
+      <div class="member-img" data-initials="GH"><img src="assets/team-01.jpg" alt="GH0ST" onerror="this.style.display='none';this.parentElement.classList.add('no-img')"><div class="member-scan"></div><span class="member-id">ID:0xA1F3</span></div>
+      <div class="member-info"><h3>GH0ST</h3><p class="member-role">RED TEAM LEAD</p><div class="member-tags"><span>AD Attack</span><span>C2</span><span>OPSEC</span></div></div>
+    </article>
+    <article class="member reveal" style="--d:.08s">
+      <div class="member-img" data-initials="VX"><img src="assets/team-02.jpg" alt="V0RT3X" onerror="this.style.display='none';this.parentElement.classList.add('no-img')"><div class="member-scan"></div><span class="member-id">ID:0x7C2E</span></div>
+      <div class="member-info"><h3>V0RT3X</h3><p class="member-role">EXPLOIT DEVELOPER</p><div class="member-tags"><span>Zero-day</span><span>Fuzzing</span><span>Kernel</span></div></div>
+    </article>
+    <article class="member reveal" style="--d:.16s">
+      <div class="member-img" data-initials="CP"><img src="assets/team-03.jpg" alt="CIPH3R" onerror="this.style.display='none';this.parentElement.classList.add('no-img')"><div class="member-scan"></div><span class="member-id">ID:0x4D9B</span></div>
+      <div class="member-info"><h3>CIPH3R</h3><p class="member-role">CRYPTO &amp; FORENSICS</p><div class="member-tags"><span>Crypto</span><span>DFIR</span><span>Malware</span></div></div>
+    </article>
+    <article class="member reveal" style="--d:.24s">
+      <div class="member-img" data-initials="N3"><img src="assets/team-04.jpg" alt="N30N" onerror="this.style.display='none';this.parentElement.classList.add('no-img')"><div class="member-scan"></div><span class="member-id">ID:0xE08F</span></div>
+      <div class="member-info"><h3>N30N</h3><p class="member-role">WEB &amp; SOCIAL ENG.</p><div class="member-tags"><span>XSS/RCE</span><span>Phishing</span><span>OSINT</span></div></div>
+    </article>
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<section id="terminal">
+  <div class="sec-head reveal" style="justify-content:center;text-align:center;flex-direction:column;align-items:center">
+    <p class="sec-tag">// TRUY CẬP HỆ THỐNG</p>
+    <h2>MỞ <span class="hl-cyan">SHELL</span> BẢO MẬT</h2>
+  </div>
+  <div class="term-wrap reveal">
+    <div class="term-bar">
+      <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
+      <span class="term-title">guest@redhat: ~/secure-shell — AES-256-GCM</span>
+    </div>
+    <div class="term" id="term">
+      <div id="termOut"></div>
+      <div class="term-line">
+        <span class="prompt">guest@redhat:~$</span>
+        <input id="termIn" autocomplete="off" spellcheck="false" disabled placeholder="đang khởi tạo...">
+      </div>
+    </div>
+  </div>
+  <p class="term-hint">Thử gõ: <b>help</b> · <b>team</b> · <b>skills</b> · <b>hack</b> · <b>whoami</b> · <b>contact</b></p>
+</section>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-top">
+    <div class="foot-logo">R3D<span>//</span>H4T</div>
+    <div class="foot-links">
+      <a href="#about">GIỚI THIỆU</a>
+      <a href="#ops">NĂNG LỰC</a>
+      <a href="#team">ĐỘI NGŨ</a>
+      <a href="#terminal">TERMINAL</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 RED HAT SECURITY — HACK THE PLANET 🌍</span>
+    <span>PGP: <b>4F2A 9C1D ... E7B3</b> · contact@redhat.sec</span>
+  </div>
+</footer>
+
+<script>
+/* ============ BOOT SEQUENCE ============ */
+(function(){
+  const log=document.getElementById('bootLog'),bar=document.getElementById('bootBar'),boot=document.getElementById('boot');
+  const lines=[
+    ['> Khởi tạo REDHAT-OS v4.2.1 ...',''],
+    ['> Tải mô-đun bảo mật ............ ','ok','[OK]'],
+    ['> Kết nối mạng ẩn danh (7 lớp) .. ','ok','[OK]'],
+    ['> Vô hiệu hóa tracker & telemetry ','ok','[OK]'],
+    ['> Cảnh báo: chế độ mũ đỏ đã bật .. ','warn','[! ]'],
+    ['> Sẵn sàng. Chào mừng, operator.','']
+  ];
+  let i=0;
+  function next(){
+    if(i>=lines.length){bar.style.width='100%';setTimeout(()=>{boot.classList.add('done');document.body.classList.remove('loading');},350);return;}
+    const [txt,cls,tag]=lines[i];
+    const d=document.createElement('div');
+    d.innerHTML=txt+(tag?`<span class="${cls}">${tag}</span>`:'');
+    log.appendChild(d);
+    bar.style.width=((i+1)/lines.length*92)+'%';
+    i++;setTimeout(next,230);
+  }
+  next();
+})();
+
+/* ============ NAV ============ */
+const nav=document.getElementById('nav'),burger=document.getElementById('burger'),navLinks=document.getElementById('navLinks');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40));
+burger.addEventListener('click',()=>{burger.classList.toggle('open');navLinks.classList.toggle('open');});
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{burger.classList.remove('open');navLinks.classList.remove('open');}));
+const navMap={};document.querySelectorAll('.nav-links a').forEach(a=>navMap[a.getAttribute('href').slice(1)]=a);
+const secObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){Object.values(navMap).forEach(a=>a.classList.remove('active'));(navMap[e.target.id]||{}).classList&&navMap[e.target.id].classList.add('active');}});},{rootMargin:'-45% 0px -50% 0px'});
+['home','about','ops','team','terminal'].forEach(id=>{const el=document.getElementById(id);if(el)secObs.observe(el);});
+
+/* ============ TICKER ============ */
+(function(){
+  const items=['PENETRATION TESTING','RED TEAM OPS','ZERO-DAY RESEARCH','MALWARE ANALYSIS','OSINT','SOCIAL ENGINEERING','AD EXPLOITATION','CLOUD SECURITY'];
+  const html=items.map(t=>`<span><b>⚡</b>${t}</span>`).join('');
+  document.getElementById('tick').innerHTML=html+html;
+})();
+
+/* ============ MATRIX RAIN ============ */
+(function(){
+  const c=document.getElementById('rain'),x=c.getContext('2d');
+  let w,h,cols,drops;const chars='アカサタナハマヤラワ01<>/\\|#$%&@ABCDEF';
+  function resize(){w=c.width=c.offsetWidth;h=c.height=c.offsetHeight;cols=Math.floor(w/16);drops=Array.from({length:cols},()=>Math.random()*-60);}
+  resize();addEventListener('resize',resize);
+  (function draw(){
+    x.fillStyle='rgba(4,7,13,0.13)';x.fillRect(0,0,w,h);
+    x.font='14px JetBrains Mono, monospace';
+    for(let i=0;i<cols;i++){
+      const ch=chars[Math.random()*chars.length|0],y=drops[i]*16;
+      const r=Math.random();
+      x.fillStyle=r<0.02?'#ff2bd6':(i%7===0?'#00e5ff':'#00ff9c');
+      x.globalAlpha=0.45+Math.random()*0.55;
+      x.fillText(ch,i*16,y);
+      if(y>h&&Math.random()>0.975)drops[i]=0;
+      drops[i]+=0.5+(i%5)*0.13;
+    }
+    x.globalAlpha=1;requestAnimationFrame(draw);
+  })();
+})();
+
+/* ============ LIGHTNING ============ */
+(function(){
+  const c=document.getElementById('lightning'),x=c.getContext('2d');
+  let w,h,bolts=[],flash=0;
+  function resize(){w=c.width=c.offsetWidth;h=c.height=c.offsetHeight;}
+  resize();addEventListener('resize',resize);
+  function path(p){x.beginPath();x.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)x.lineTo(p[k].x,p[k].y);x.stroke();}
+  function spawn(){
+    let cx=Math.random()*w,cy=0;const pts=[{x:cx,y:cy}];
+    while(cy<h*0.92){cy+=10+Math.random()*22;cx+=(Math.random()-0.5)*46;pts.push({x:cx,y:cy});}
+    const branches=[];
+    pts.forEach((p,i)=>{if(i>3&&Math.random()<0.13){let bx=p.x,by=p.y;const bp=[{x:bx,y:by}];const n=3+(Math.random()*4|0);for(let k=0;k<n;k++){bx+=(Math.random()-0.5)*62;by+=8+Math.random()*18;bp.push({x:bx,y:by});}branches.push(bp);}});
+    bolts.push({pts,branches,life:1});flash=0.3;
+    setTimeout(spawn,800+Math.random()*2600);
+  }
+  setTimeout(spawn,1100);
+  (function draw(){
+    x.clearRect(0,0,w,h);
+    if(flash>0){x.fillStyle=`rgba(140,225,255,${flash*0.06})`;x.fillRect(0,0,w,h);flash-=0.02;}
+    bolts=bolts.filter(b=>b.life>0);
+    bolts.forEach(b=>{
+      x.shadowColor='#00e5ff';x.shadowBlur=20;x.lineWidth=2.2;x.strokeStyle=`rgba(190,242,255,${b.life})`;path(b.pts);
+      x.lineWidth=1;x.strokeStyle=`rgba(0,229,255,${b.life*0.8})`;b.branches.forEach(path);
+      b.life-=0.055;
+    });
+    x.shadowBlur=0;requestAnimationFrame(draw);
+  })();
+})();
+
+/* ============ GLOBE ============ */
+(function(){
+  const c=document.getElementById('globe'),x=c.getContext('2d');
+  let w,h;const N=240,pts=[];const ga=Math.PI*(3-Math.sqrt(5));
+  for(let i=0;i<N;i++){const y=1-(i/(N-1))*2,r=Math.sqrt(1-y*y),t=ga*i;pts.push({x:Math.cos(t)*r,y,z:Math.sin(t)*r,mag:Math.random()<0.12});}
+  function resize(){const r=c.getBoundingClientRect();w=c.width=r.width;h=c.height=r.height;}
+  resize();addEventListener('resize',resize);
+  let a=0;
+  (function draw(){
+    x.clearRect(0,0,w,h);
+    const cx=w/2,cy=h/2,R=Math.min(w,h)*0.36;a+=0.0035;
+    const cs=Math.cos(a),sn=Math.sin(a);
+    const P=pts.map(p=>{const X=p.x*cs-p.z*sn,Z=p.x*sn+p.z*cs;return{x:cx+X*R,y:cy+p.y*R,z:Z,mag:p.mag,X,Y:p.y,Z};});
+    // glow core
+    const g=x.createRadialGradient(cx,cy,0,cx,cy,R*1.25);
+    g.addColorStop(0,'rgba(0,229,255,0.10)');g.addColorStop(1,'rgba(0,229,255,0)');
+    x.fillStyle=g;x.beginPath();x.arc(cx,cy,R*1.25,0,7);x.fill();
+    // lines
+    const th=0.5;
+    x.lineWidth=1;
+    for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){
+      const dx=P[i].X-P[j].X,dy=P[i].Y-P[j].Y,dz=P[i].Z-P[j].Z,d2=dx*dx+dy*dy+dz*dz;
+      if(d2<th*th){const az=(P[i].z+P[j].z)/2;if(az>-0.25){x.strokeStyle=`rgba(0,229,255,${(az+1)/2*0.32})`;x.beginPath();x.moveTo(P[i].x,P[i].y);x.lineTo(P[j].x,P[j].y);x.stroke();}}
+    }
+    // points
+    P.forEach(p=>{const al=0.2+(p.z+1)/2*0.8;const s=p.z>0?2.1:1.2;x.fillStyle=p.mag?`rgba(255,43,214,${al})`:`rgba(0,255,156,${al})`;x.beginPath();x.arc(p.x,p.y,s,0,7);x.fill();});
+    requestAnimationFrame(draw);
+  })();
+})();
+
+/* ============ REVEAL + COUNTER ============ */
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+const cio=new IntersectionObserver(es=>{es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;cio.unobserve(el);const end=parseFloat(el.dataset.count),dec=+(el.dataset.dec||0),dur=1500,t0=performance.now();(function tick(t){const p=Math.min((t-t0)/dur,1),v=end*(1-Math.pow(1-p,3));el.textContent=v.toFixed(dec);if(p<1)requestAnimationFrame(tick);})(t0);});},{threshold:0.6});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+/* ============ MOON PARALLAX ============ */
+const moon=document.getElementById('moon');
+addEventListener('scroll',()=>{if(scrollY<innerHeight)moon.style.transform=`translateY(${scrollY*0.18}px)`;},{passive:true});
+
+/* ============ CUSTOM CURSOR ============ */
+if(matchMedia('(pointer:fine)').matches){
+  document.body.classList.add('has-cursor');
+  const dot=document.querySelector('.cursor-dot'),ring=document.querySelector('.cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});
+  (function loop(){rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+  document.querySelectorAll('a,button,.op,.member,#termIn').forEach(el=>{el.addEventListener('mouseenter',()=>ring.classList.add('big'));el.addEventListener('mouseleave',()=>ring.classList.remove('big'));});
+}
+
+/* ============ TERMINAL ============ */
+(function(){
+  const out=document.getElementById('termOut'),inp=document.getElementById('termIn'),box=document.getElementById('term');
+  let ready=false;
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  function scroll(){box.scrollTop=box.scrollHeight;}
+  function print(html,cls){const d=document.createElement('div');d.className='t-line '+(cls||'');d.innerHTML=html;out.appendChild(d);scroll();}
+  async function typeLine(text,cls){const d=document.createElement('div');d.className='t-line '+(cls||'');out.appendChild(d);for(let i=0;i<text.length;i++){d.textContent+=text[i];scroll();await wait(7);}}
+
+  const MEMBERS=[['GH0ST','Red Team Lead'],['V0RT3X','Exploit Developer'],['CIPH3R','Crypto & Forensics'],['N30N','Web & Social Eng.']];
+  const SKILLS=[['Offensive Security','98'],['Exploit Development','92'],['Malware Analysis','88'],['Cryptography','85'],['OSINT & DFIR','90'],['Cloud / AD Attack','94']];
+
+  async function bootTerm(){
+    const seq=['REDHAT SECURE SHELL v3.7.1 — kênh mã hóa AES-256-GCM','Đang kết nối ẩn danh qua 7 lớp proxy ........ [OK]','Xác thực khóa công khai RSA-4096 ............ [OK]','Cảnh báo: mọi phiên đều được ghi log (đùa đấy).','Gõ "help" để xem danh sách lệnh.'];
+    for(const s of seq){await typeLine(s,'t-sys');await wait(110);}
+    ready=true;inp.disabled=false;inp.placeholder='nhập lệnh...';inp.focus();
+  }
+  const tio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){tio.disconnect();bootTerm();}});},{threshold:0.4});
+  tio.observe(document.getElementById('terminal'));
+  box.addEventListener('click',()=>{if(ready)inp.focus();});
+
+  async function runCmd(raw){
+    const c=raw.toLowerCase().trim(),cmd=c.split(' ')[0];
+    switch(cmd){
+      case 'help':
+        print('Các lệnh khả dụng:','t-out');
+        [['help','hiển thị trợ giúp'],['about','thông tin đội'],['team','danh sách thành viên'],['skills','năng lực + thanh tiến độ'],['contact','kênh liên hệ'],['whoami','bạn là ai'],['date','thời gian hệ thống'],['hack','thử xâm nhập (demo)'],['clear','xóa màn hình']]
+          .forEach(([k,v])=>print(`  <b>${k}</b>  — ${v}`,'t-cmd'));
+        break;
+      case 'about':
+        print('RED HAT SECURITY — đội mũ đỏ chuyên offensive security.','t-out');
+        print('Sứ mệnh: phá hệ thống (hợp pháp) để giúp bạn mạnh hơn.','t-sys');
+        break;
+      case 'team':
+        print(':: DANH SÁCH OPERATOR ::','t-ok');
+        MEMBERS.forEach(([n,r],i)=>print(`  [0x${(i+1).toString(16).toUpperCase()}] ${n.padEnd(8)} <span style="color:var(--dim)">// ${r}</span>`,'t-out'));
+        break;
+      case 'skills':
+        print(':: MA TRẬN NĂNG LỰC ::','t-ok');
+        for(const [n,v] of SKILLS){const f=Math.round(v/5);print(`  ${n.padEnd(22)} <span style="color:var(--green)">${'█'.repeat(f)}${'░'.repeat(20-f)}</span> ${v}%`,'t-out');await wait(40);}
+        break;
+      case 'contact':
+        print('email  : contact@redhat.sec','t-out');
+        print('signal : @redhat_sec','t-out');
+        print('PGP    : 4F2A 9C1D 77B0 3E55 ... E7B3','t-sys');
+        break;
+      case 'whoami':
+        print('guest — quyền: khách truy cập ẩn danh','t-out');
+        print('Level 0/10. Muốn lên 10? Hãy gia nhập chúng tôi 😉','t-sys');
+        break;
+      case 'date':print(new Date().toString(),'t-out');break;
+      case 'clear':out.innerHTML='';break;
+      case 'sudo':print('[!] Sai mật khẩu. Gợi ý: nó nằm ngay trước mắt bạn đấy.','t-err');break;
+      case 'rm':print('rm: từ chối. Chúng tôi xây hệ thống — không phá bừa.','t-err');break;
+      case 'hack':await hackSeq();break;
+      case '':break;
+      default:print(`zsh: command not found: ${esc(cmd)}  —  gõ "help"`,'t-err');
+    }
+  }
+  async function hackSeq(){
+    const steps=['Quét cổng mục tiêu: 443, 22, 8080 ...','Phát hiện CVE-2026-1337 — lỗ hổng chưa vá ✔','Bypass tường lửa lớp 3 ...','Tiêm payload reverse-shell ...'];
+    for(const s of steps){print(s,'t-out');await wait(480);}
+    const bar=document.createElement('div');bar.className='t-line t-ok';out.appendChild(bar);
+    for(let p=0;p<=100;p+=4){const f=Math.round(p/5);bar.textContent=`Đang leo thang đặc quyền [${'█'.repeat(f)}${'░'.repeat(20-f)}] ${p}%`;scroll();await wait(55);}
+    print('✔ ACCESS GRANTED — quyền root đã thuộc về bạn.','t-ok');await wait(400);
+    print('(Chỉ là demo. Chúng tôi chỉ hack khi có hợp đồng đàng hoàng 😎)','t-sys');
+  }
+  inp.addEventListener('keydown',async e=>{
+    if(e.key!=='Enter'||!ready)return;
+    const v=inp.value;inp.value='';
+    print(`<span class="t-prompt">guest@redhat:~$</span> ${esc(v)}`);
+    inp.disabled=true;await runCmd(v);inp.disabled=false;inp.focus();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Cinematic Profile Portfolio",
+  "description": "A modern, minimalist, and highly interactive cinematic glassmorphism portfolio featuring full-screen atmospheric visuals, centered profile hero, interactive project showcase, and dynamic developer experience.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
