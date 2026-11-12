@@ -41,9 +41,9 @@ export const PERSONAL_INFO = {
     { labelVi: 'Điểm Lighthouse trung bình', labelEn: 'Avg. Lighthouse Score', labelZh: '平均性能评分', labelTw: '平均效能評分', value: '99' },
     { labelVi: 'Đóng góp Open Source', labelEn: 'OSS Contributions', labelZh: '开源贡献', labelTw: '開源貢獻', value: '180+' },
   ],
-  avatarUrl: './images/avatar.png',
+  avatarUrl: '/images/avatar.png',
   // High quality cinematic cover options
-  coverUrl: './images/banner.png',
+  coverUrl: '/images/banner.png',
   // Background images for different themes
   themeBackgrounds: {
     cyber: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=2400&q=80',

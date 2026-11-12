@@ -78,7 +78,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
           className="relative w-full mb-16 sm:mb-20"
         >
           {/* Horizontal Cover Image Container */}
-          <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] md:aspect-[3/1] rounded-2xl sm:rounded-3xl overflow-hidden glass-panel-elevated p-1 shadow-2xl group border-theme-subtle">
+          <div className="relative w-full aspect-[16/8] sm:aspect-[16/5] md:aspect-[3/1] rounded-2xl sm:rounded-3xl overflow-hidden glass-panel-elevated p-1 shadow-2xl group border-theme-subtle">
             <div 
               className="w-full h-full rounded-[20px] sm:rounded-[24px] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
               style={{
@@ -91,14 +91,14 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
             </div>
 
             {/* Subtle banner watermark / badge */}
-            <div className="absolute top-4 right-4 sm:top-5 sm:right-5 px-3 py-1 rounded-full glass-pill text-[11px] font-semibold tracking-wider text-white/90 uppercase flex items-center gap-1.5 backdrop-blur-md border-theme-subtle">
+            <div className="absolute top-3 right-3 sm:top-5 sm:right-5 px-2.5 sm:px-3 py-1 rounded-full glass-pill text-[10px] sm:text-[11px] font-semibold tracking-wider text-white/90 uppercase flex items-center gap-1.5 backdrop-blur-md border-theme-subtle">
               <span className="w-1.5 h-1.5 rounded-full bg-[#d4b870] animate-ping" />
               <span>{lang === 'vi' ? 'Hà Nội, VN' : lang === 'zh' || lang === 'tw' ? '河内 · 越南' : 'Hanoi, VN'}</span>
             </div>
           </div>
 
           {/* Centered Overlapping Circular Avatar */}
-          <div className="absolute left-1/2 -bottom-14 sm:-bottom-18 -translate-x-1/2 flex flex-col items-center">
+          <div className="absolute left-1/2 -bottom-12 sm:-bottom-18 -translate-x-1/2 flex flex-col items-center">
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -110,13 +110,20 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
               <div className="absolute -inset-1 rounded-full bg-theme-gradient opacity-75 blur-md group-hover:opacity-100 transition-opacity animate-pulse" />
               
               {/* Avatar container */}
-              <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-[#080706] shadow-2xl overflow-hidden bg-[#16120D] ring-2 ring-[#d4b870]/30 group-hover:ring-[#d4b870] transition-all">
+              <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-[#080706] shadow-2xl overflow-hidden bg-[#16120D] ring-2 ring-[#d4b870]/30 group-hover:ring-[#d4b870] transition-all">
                 <img
                   src={PERSONAL_INFO.avatarUrl}
                   alt={PERSONAL_INFO.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="eager"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    // Fallback to high-res avatar if local file cannot be found
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('unsplash')) {
+                      target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80';
+                    }
+                  }}
                 />
               </div>
 
@@ -125,7 +132,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
                 className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-1 sm:p-1.5 rounded-full bg-[#080706] border border-[#d4b870]/30 shadow-lg"
                 title={getStatusText()}
               >
-                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#d4b870] flex items-center justify-center glow-theme">
+                <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-[#d4b870] flex items-center justify-center glow-theme">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#080706]" />
                 </div>
               </div>
@@ -134,14 +141,14 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
         </motion.div>
 
         {/* Profile Information Block */}
-        <div className="flex flex-col items-center text-center mt-2 max-w-2xl px-2">
+        <div className="flex flex-col items-center text-center mt-2 max-w-2xl px-2 w-full">
           
           {/* Phoenix A Chapter Marker */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.6 }}
-            className="mb-3 text-[11px] font-['JetBrains_Mono'] tracking-[0.28em] text-[#d4b870] uppercase font-semibold flex items-center gap-2"
+            className="mb-2 sm:mb-3 text-[10px] sm:text-[11px] font-['JetBrains_Mono'] tracking-[0.28em] text-[#d4b870] uppercase font-semibold flex items-center gap-2"
           >
             <span>—</span>
             <span>{UI_TRANSLATIONS.hero.filiusSolis[lang] || UI_TRANSLATIONS.hero.filiusSolis.en}</span>
@@ -153,7 +160,7 @@ export const Hero: React.FC<HeroProps> = ({ lang, onOpenResume }) => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.6 }}
-            className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight font-['Cinzel',serif] bg-gradient-to-r from-[#f0d98c] via-[#d4b870] to-[#c8c8c8] bg-clip-text text-transparent"
+            className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight font-['Cinzel',serif] bg-gradient-to-r from-[#f0d98c] via-[#d4b870] to-[#c8c8c8] bg-clip-text text-transparent break-words w-full"
           >
             {PERSONAL_INFO.name}
           </motion.h1>

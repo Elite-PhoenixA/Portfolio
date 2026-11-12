@@ -110,6 +110,9 @@
     color-scheme: dark;
     background-color: #050505;
     font-family: 'Cormorant Garamond', Georgia, serif;
+    scroll-padding-top: 5.5rem;
+    scrollbar-gutter: stable;
+    touch-action: manipulation;
   }
 }
 

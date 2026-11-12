@@ -220,15 +220,15 @@ export const Skills: React.FC<SkillsProps> = ({
                 <div className="pt-2 border-t border-white/5">
                   <div className="flex items-center justify-between text-[11px] font-mono text-white/60 mb-1.5">
                     <span>{UI_TRANSLATIONS.skills.proficiency[lang] || UI_TRANSLATIONS.skills.proficiency.en}</span>
-                    <span className="text-[#f0d98c] font-semibold">{skill.level}%</span>
+                    <span className="text-[var(--primary-light)] font-semibold">{skill.level}%</span>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       whileInView={{ width: `${skill.level}%` }}
                       viewport={{ once: true }}
-                      transition={{ duration: 1, ease: 'easeOut' }}
-                      className="h-full rounded-full bg-gradient-to-r from-[#f0d98c] to-[#d4b870]"
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                      className="h-full rounded-full bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary)]"
                     />
                   </div>
                 </div>

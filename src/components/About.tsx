@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Compass, 
   CheckCircle, 
@@ -18,9 +18,15 @@ interface AboutProps {
 export const About: React.FC<AboutProps> = ({ lang }) => {
   const [terminalInput, setTerminalInput] = useState('');
   const [terminalOutput, setTerminalOutput] = useState<string[]>([
-    'Welcome to Khuong Duy dev terminal v2.4.0 [Amber Gold Edition]',
+    'Welcome to Khuong Duy dev terminal v2.4.0 [Phoenix A Edition]',
     'Type "help" or click a command below to inspect system identity.',
   ]);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto scroll terminal to bottom on new output
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [terminalOutput]);
 
   const handleCommand = (cmd: string) => {
     soundEffects.playClick();
@@ -29,21 +35,28 @@ export const About: React.FC<AboutProps> = ({ lang }) => {
 
     switch (cleanCmd) {
       case 'help':
-        newLogs.push('Available commands: [whoami] [stack] [focus] [uptime] [clear]');
+        newLogs.push('Available commands: [whoami] [stack] [focus] [uptime] [projects] [contact] [clear]');
         break;
       case 'whoami':
         newLogs.push(`> Nguyễn Khương Duy — Senior Full-Stack & Creative Developer`);
+        newLogs.push(`> Alias: Elite · Collective: PHOENIX A (Filius Solis)`);
         newLogs.push(`> Location: Hanoi, Vietnam / Available Worldwide`);
         break;
       case 'stack':
-        newLogs.push(`> Core: React 19, TypeScript, Node.js, Next.js, PostgreSQL`);
-        newLogs.push(`> Architecture: Microservices, WebSockets, Tailwind, Docker, GCP`);
+        newLogs.push(`> Core: React 19, TypeScript, Node.js, Next.js, PostgreSQL, Go`);
+        newLogs.push(`> Architecture: Microservices, WebSockets, Tailwind, Docker, K8s, GCP`);
         break;
       case 'focus':
-        newLogs.push(`> Crafting high-impact UI/UX with 60fps animations & sub-50ms API latency.`);
+        newLogs.push(`> Crafting high-impact UI/UX with 60-120fps animations & sub-20ms latency.`);
         break;
       case 'uptime':
-        newLogs.push(`> 5+ Years of production engineering without compromise.`);
+        newLogs.push(`> 5+ Years of production engineering without compromise. 99.98% availability.`);
+        break;
+      case 'projects':
+        newLogs.push(`> 42+ projects shipped. Featured: Lumina Nexus, Aether Studio, Chrono Synth, Void Vault.`);
+        break;
+      case 'contact':
+        newLogs.push(`> Direct: ryusama26@gmail.com · Response SLA: < 24 business hours.`);
         break;
       case 'clear':
         setTerminalOutput(['Terminal cleared. Ready for input.']);
@@ -213,12 +226,13 @@ export const About: React.FC<AboutProps> = ({ lang }) => {
                   {line}
                 </div>
               ))}
+              <div ref={terminalEndRef} />
             </div>
 
             {/* Quick Command Suggestions */}
             <div className="px-4 py-2.5 bg-[#120E0A] border-t border-white/5 flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] text-white/40 uppercase font-semibold mr-1">Quick:</span>
-              {['whoami', 'stack', 'focus', 'uptime', 'clear'].map((cmd) => (
+              {['whoami', 'stack', 'focus', 'uptime', 'projects', 'contact', 'clear'].map((cmd) => (
                 <button
                   key={cmd}
                   onClick={() => handleCommand(cmd)}
@@ -243,12 +257,12 @@ export const About: React.FC<AboutProps> = ({ lang }) => {
                 value={terminalInput}
                 onChange={(e) => setTerminalInput(e.target.value)}
                 placeholder="Type command and press Enter..."
-                className="w-full bg-transparent text-xs font-mono text-white placeholder-white/30 focus:outline-none focus:text-[#f0d98c]"
+                className="w-full bg-transparent text-base sm:text-xs font-mono text-white placeholder-white/30 focus:outline-none focus:text-[#f0d98c]"
                 id="terminal-user-input"
               />
               <button 
                 type="submit" 
-                className="p-1 rounded text-[#d4b870]/70 hover:text-[#f0d98c] cursor-pointer"
+                className="p-1.5 rounded text-[#d4b870]/70 hover:text-[#f0d98c] cursor-pointer"
                 title="Execute command"
               >
                 <CornerDownLeft className="w-3.5 h-3.5" />

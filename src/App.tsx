@@ -14,9 +14,37 @@ import { ResumeModal } from './components/ResumeModal';
 import { Footer } from './components/Footer';
 
 export default function App() {
-  const [lang, setLang] = useState<Language>('vi');
-  const [userBaseTheme, setUserBaseTheme] = useState<ThemeMood>('amber');
-  const [isRainActive, setIsRainActive] = useState<boolean>(true);
+  // Restore persisted preferences from localStorage or use defaults
+  const [lang, setLang] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('phoenix_lang') as Language;
+      if (saved && ['vi', 'en', 'zh', 'tw'].includes(saved)) {
+        return saved;
+      }
+    }
+    return 'vi';
+  });
+
+  const [userBaseTheme, setUserBaseTheme] = useState<ThemeMood>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('phoenix_theme') as ThemeMood;
+      if (saved && ['amber', 'cyber', 'aurora', 'obsidian', 'emerald'].includes(saved)) {
+        return saved;
+      }
+    }
+    return 'amber';
+  });
+
+  const [isRainActive, setIsRainActive] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('phoenix_rain');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    }
+    return true;
+  });
+
   const [rainColorMode, setRainColorMode] = useState<'theme' | 'amber'>('theme');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
@@ -24,6 +52,28 @@ export default function App() {
 
   // Dynamic effective theme: switches to 'obsidian' when inside Skills section, and reverts to user's chosen theme otherwise
   const effectiveTheme: ThemeMood = isSkillsSectionActive ? 'obsidian' : userBaseTheme;
+
+  // Persist language
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('phoenix_lang', lang);
+      document.documentElement.lang = lang;
+    }
+  }, [lang]);
+
+  // Persist theme
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('phoenix_theme', userBaseTheme);
+    }
+  }, [userBaseTheme]);
+
+  // Persist rain state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('phoenix_rain', String(isRainActive));
+    }
+  }, [isRainActive]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', effectiveTheme);

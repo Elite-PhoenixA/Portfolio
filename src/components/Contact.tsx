@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 import { 
   Mail, 
   Send, 
@@ -69,7 +70,17 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
       setIsSubmitting(false);
       setIsSubmitted(true);
       soundEffects.playChime();
-    }, 1200);
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.65 },
+          colors: ['#d4b870', '#f0d98c', '#ffffff', '#b89848']
+        });
+      } catch {
+        // ignore confetti errors
+      }
+    }, 1000);
   };
 
   const projectTypes: { id: 'fullstack' | 'ai' | 'consulting'; key: keyof typeof UI_TRANSLATIONS.contact.topics }[] = [
@@ -284,10 +295,11 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
                       <input
                         type="text"
                         required
+                        autoComplete="name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder={UI_TRANSLATIONS.contact.namePlaceholder[lang] || UI_TRANSLATIONS.contact.namePlaceholder.en}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-base sm:text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all"
                         id="contact-form-name"
                       />
                     </div>
@@ -299,10 +311,11 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
                       <input
                         type="email"
                         required
+                        autoComplete="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="you@company.com"
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-base sm:text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all"
                         id="contact-form-email"
                       />
                     </div>
@@ -319,7 +332,7 @@ export const Contact: React.FC<ContactProps> = ({ lang }) => {
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder={UI_TRANSLATIONS.contact.messagePlaceholder[lang] || UI_TRANSLATIONS.contact.messagePlaceholder.en}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all resize-none"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-base sm:text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#d4b870] focus:bg-white/10 transition-all resize-none"
                       id="contact-form-message"
                     />
                   </div>

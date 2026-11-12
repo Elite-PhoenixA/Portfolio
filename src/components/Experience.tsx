@@ -39,7 +39,7 @@ export const Experience: React.FC<ExperienceProps> = ({ lang }) => {
       </div>
 
       {/* Timeline Container */}
-      <div className="relative border-l border-[#d4b870]/30 ml-4 sm:ml-8 pl-6 sm:pl-10 space-y-12">
+      <div className="relative border-l border-[#d4b870]/30 ml-6 sm:ml-10 pl-5 sm:pl-10 space-y-12">
         {EXPERIENCE_DATA.map((exp, idx) => (
           <motion.div
             key={exp.id}
@@ -50,7 +50,7 @@ export const Experience: React.FC<ExperienceProps> = ({ lang }) => {
             className="relative group"
           >
             {/* Timeline node marker */}
-            <div className="absolute -left-[31px] sm:-left-[47px] top-1.5 w-4 h-4 rounded-full bg-[#050505] border-2 border-[#d4b870] group-hover:bg-[#d4b870] group-hover:scale-125 transition-all shadow-[0_0_10px_rgba(212,184,112,0.5)]" />
+            <div className="absolute -left-[28px] sm:-left-[48px] top-1.5 w-4 h-4 rounded-full bg-[#050505] border-2 border-[#d4b870] group-hover:bg-[#d4b870] group-hover:scale-125 transition-all shadow-[0_0_10px_rgba(212,184,112,0.5)]" />
 
             {/* Experience Card */}
             <div className="phoenix-card rounded-3xl p-6 sm:p-8 hover:border-[#d4b870]/60 transition-all duration-300 border-[#d4b870]/25 bg-[#0e0d0a]/80 backdrop-blur-xl">
@@ -113,7 +113,7 @@ export const Experience: React.FC<ExperienceProps> = ({ lang }) => {
           className="relative group pt-4"
         >
           {/* Education node */}
-          <div className="absolute -left-[31px] sm:-left-[47px] top-6 w-4 h-4 rounded-full bg-[#080706] border-2 border-[#d4b870] group-hover:bg-[#d4b870] group-hover:scale-125 transition-all shadow-md" />
+          <div className="absolute -left-[28px] sm:-left-[48px] top-6 w-4 h-4 rounded-full bg-[#080706] border-2 border-[#d4b870] group-hover:bg-[#d4b870] group-hover:scale-125 transition-all shadow-md" />
 
           <div className="phoenix-card rounded-3xl p-6 sm:p-8 hover:border-[#d4b870]/60 transition-all border-[#d4b870]/25 bg-[#0e0d0a]/80 backdrop-blur-xl">
             <div className="flex items-start gap-4">

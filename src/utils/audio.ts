@@ -3,6 +3,34 @@
 class AudioManager {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = true; // muted by default to respect user privacy
+  private listeners: Set<(isMuted: boolean) => void> = new Set();
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('phoenix_audio_muted');
+      if (saved !== null) {
+        this.isMuted = saved === 'true';
+      }
+    }
+  }
+
+  private notify() {
+    this.listeners.forEach((listener) => {
+      try {
+        listener(this.isMuted);
+      } catch {
+        // ignore callback error
+      }
+    });
+  }
+
+  public subscribe(listener: (isMuted: boolean) => void): () => void {
+    this.listeners.add(listener);
+    listener(this.isMuted);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -13,17 +41,29 @@ class AudioManager {
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
 
   public toggleMute(): boolean {
     this.isMuted = !this.isMuted;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('phoenix_audio_muted', String(this.isMuted));
+    }
+    this.notify();
     if (!this.isMuted) {
       this.playChime();
     }
     return this.isMuted;
+  }
+
+  public setMuted(muted: boolean): void {
+    this.isMuted = muted;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('phoenix_audio_muted', String(this.isMuted));
+    }
+    this.notify();
   }
 
   public getMutedState(): boolean {

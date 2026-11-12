@@ -19,10 +19,27 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
   const redRainCanvasRef = useRef<HTMLCanvasElement>(null);
   const lightningCanvasRef = useRef<HTMLCanvasElement>(null);
   const embersCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  // High performance: only animate when in or near viewport
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsInView(entry.isIntersecting);
+        });
+      },
+      { threshold: 0.02, rootMargin: '200px 0px 200px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // 1. PHOENIX A GOLDEN/CYAN MATRIX RAIN (Inherited from Skills & phoenixa.html)
   useEffect(() => {
-    if (mode === 'redhat') return;
+    if (!isInView || mode === 'redhat') return;
 
     const canvas = phoenixCanvasRef.current;
     if (!canvas) return;
@@ -104,11 +121,11 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mode]);
+  }, [mode, isInView]);
 
   // 2. APOCALYPTIC RED CYBER RAIN (Directly integrated from cyber-rain-red.html)
   useEffect(() => {
-    if (mode === 'phoenix') return;
+    if (!isInView || mode === 'phoenix') return;
 
     const canvas = redRainCanvasRef.current;
     if (!canvas) return;
@@ -202,11 +219,11 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mode]);
+  }, [mode, isInView]);
 
   // 3. RED LIGHTNING & SKY STORM FLASH ENGINE (From cyber-rain-red.html)
   useEffect(() => {
-    if (mode === 'phoenix') return;
+    if (!isInView || mode === 'phoenix') return;
 
     const canvas = lightningCanvasRef.current;
     if (!canvas) return;
@@ -357,11 +374,11 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
       cancelAnimationFrame(animationFrameId);
       clearTimeout(spawnTimeoutId as number);
     };
-  }, [mode]);
+  }, [mode, isInView]);
 
   // 4. RISING EMBERS & FIERY SPARK PARTICLES (From cyber-rain-red.html)
   useEffect(() => {
-    if (mode === 'phoenix') return;
+    if (!isInView || mode === 'phoenix') return;
 
     const canvas = embersCanvasRef.current;
     if (!canvas) return;
@@ -452,17 +469,13 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
       cancelAnimationFrame(animationFrameId);
       clearInterval(intervalId);
     };
-  }, [mode]);
+  }, [mode, isInView]);
 
   return (
     <div
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
-      style={{
-        opacity,
-        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-      }}
+      style={{ opacity }}
       id="team-cyber-rain-container"
     >
       {/* Layer 1: Phoenix A Golden Matrix Rain */}
@@ -470,7 +483,11 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
         <canvas
           ref={phoenixCanvasRef}
           className="absolute inset-0 w-full h-full block pointer-events-none"
-          style={{ opacity: mode === 'hybrid' ? 0.6 : 0.85, zIndex: 1 }}
+          style={{ 
+            opacity: mode === 'hybrid' ? 0.7 : 0.88, 
+            mixBlendMode: 'screen',
+            zIndex: 1 
+          }}
           id="team-phoenix-rain-canvas"
         />
       )}
@@ -517,10 +534,10 @@ export const TeamCyberRain: React.FC<TeamCyberRainProps> = ({
         />
       )}
 
-      {/* Atmospheric Red Pulse & Blood Moon Aura */}
+      {/* Atmospheric Red Pulse & Blood Moon Aura (Seamless diffuse light) */}
       {(mode === 'hybrid' || mode === 'redhat') && (
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-[#ff0022]/8 rounded-full blur-[140px] pointer-events-none"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] bg-[#ff0022]/6 rounded-full blur-[180px] pointer-events-none"
           style={{ zIndex: 0 }}
         />
       )}

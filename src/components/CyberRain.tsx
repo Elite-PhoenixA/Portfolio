@@ -170,10 +170,10 @@ export const CyberRain: React.FC<CyberRainProps> = ({
             mid: { r: 212, g: 184, b: 112 },
             tail: { r: 168, g: 152, b: 96 },
             deep: { r: 106, g: 106, b: 88 },
-            waterLine: 'rgba(212, 184, 112, 0.4)',
+            waterLine: 'rgba(212, 184, 112, 0.15)',
             ripple: 'rgba(212, 184, 112,',
-            waterGradTop: 'rgba(15, 12, 8, 0.65)',
-            waterGradBottom: 'rgba(5, 5, 5, 0.95)',
+            waterGradTop: 'rgba(15, 12, 8, 0)',
+            waterGradBottom: 'rgba(5, 5, 5, 0.15)',
           };
         case 'aurora':
           return {
@@ -181,10 +181,10 @@ export const CyberRain: React.FC<CyberRainProps> = ({
             mid: { r: 53, g: 255, b: 156 },
             tail: { r: 16, g: 185, b: 129 },
             deep: { r: 6, g: 95, b: 70 },
-            waterLine: 'rgba(53, 255, 156, 0.35)',
+            waterLine: 'rgba(53, 255, 156, 0.15)',
             ripple: 'rgba(53, 255, 156,',
-            waterGradTop: 'rgba(3, 28, 20, 0.6)',
-            waterGradBottom: 'rgba(2, 18, 14, 0.95)',
+            waterGradTop: 'rgba(3, 28, 20, 0)',
+            waterGradBottom: 'rgba(2, 18, 14, 0.15)',
           };
         case 'obsidian':
           return {
@@ -192,10 +192,10 @@ export const CyberRain: React.FC<CyberRainProps> = ({
             mid: { r: 192, g: 132, b: 252 },
             tail: { r: 138, g: 92, b: 252 },
             deep: { r: 88, g: 28, b: 135 },
-            waterLine: 'rgba(192, 132, 252, 0.35)',
+            waterLine: 'rgba(192, 132, 252, 0.15)',
             ripple: 'rgba(192, 132, 252,',
-            waterGradTop: 'rgba(20, 12, 35, 0.6)',
-            waterGradBottom: 'rgba(5, 3, 10, 0.95)',
+            waterGradTop: 'rgba(20, 12, 35, 0)',
+            waterGradBottom: 'rgba(5, 3, 10, 0.15)',
           };
         case 'emerald':
           return {
@@ -203,10 +203,10 @@ export const CyberRain: React.FC<CyberRainProps> = ({
             mid: { r: 52, g: 211, b: 153 },
             tail: { r: 16, g: 185, b: 129 },
             deep: { r: 4, g: 120, b: 87 },
-            waterLine: 'rgba(52, 211, 153, 0.35)',
+            waterLine: 'rgba(52, 211, 153, 0.15)',
             ripple: 'rgba(52, 211, 153,',
-            waterGradTop: 'rgba(2, 30, 20, 0.6)',
-            waterGradBottom: 'rgba(1, 15, 10, 0.95)',
+            waterGradTop: 'rgba(2, 30, 20, 0)',
+            waterGradBottom: 'rgba(1, 15, 10, 0.15)',
           };
         case 'cyber':
         default:
@@ -215,10 +215,10 @@ export const CyberRain: React.FC<CyberRainProps> = ({
             mid: { r: 126, g: 249, b: 255 },
             tail: { r: 56, g: 189, b: 248 },
             deep: { r: 14, g: 116, b: 144 },
-            waterLine: 'rgba(126, 249, 255, 0.35)',
+            waterLine: 'rgba(126, 249, 255, 0.15)',
             ripple: 'rgba(126, 249, 255,',
-            waterGradTop: 'rgba(5, 24, 38, 0.6)',
-            waterGradBottom: 'rgba(5, 11, 24, 0.95)',
+            waterGradTop: 'rgba(5, 24, 38, 0)',
+            waterGradBottom: 'rgba(5, 11, 24, 0.15)',
           };
       }
     }
@@ -362,14 +362,15 @@ export const CyberRain: React.FC<CyberRainProps> = ({
         }
       }
 
-      // Draw subtle water surface gradient at lower plane
-      const waterGrad = ctx!.createLinearGradient(0, waterSurface, 0, height);
-      waterGrad.addColorStop(0, palette.waterGradTop);
+      // Draw subtle feathered water surface gradient at lower plane (seamless fade)
+      const waterGrad = ctx!.createLinearGradient(0, waterSurface - 40, 0, height);
+      waterGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      waterGrad.addColorStop(0.25, palette.waterGradTop);
       waterGrad.addColorStop(1, palette.waterGradBottom);
       ctx!.fillStyle = waterGrad;
-      ctx!.fillRect(0, waterSurface - 2, width, height - waterSurface + 2);
+      ctx!.fillRect(0, waterSurface - 40, width, height - waterSurface + 40);
 
-      // Draw fluid waterline path
+      // Draw delicate fluid waterline path (ambient, non-intrusive)
       ctx!.beginPath();
       for (let x = 0; x <= width; x += WAVE_RESOLUTION) {
         const idx = Math.floor(x / WAVE_RESOLUTION);
@@ -380,7 +381,7 @@ export const CyberRain: React.FC<CyberRainProps> = ({
         else ctx!.lineTo(x, py);
       }
       ctx!.strokeStyle = palette.waterLine;
-      ctx!.lineWidth = 1.5;
+      ctx!.lineWidth = 0.8;
       ctx!.stroke();
 
       // Draw expanding concentric ripple rings
@@ -439,7 +440,25 @@ export const CyberRain: React.FC<CyberRainProps> = ({
       }
     }
 
-    window.addEventListener('resize', resize);
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    const debouncedResize = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        resize();
+      }, 100);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animationFrameId);
+      } else {
+        lastTime = performance.now();
+        animationFrameId = requestAnimationFrame(render);
+      }
+    };
+
+    window.addEventListener('resize', debouncedResize);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     canvas.addEventListener('click', handleInteract);
     canvas.addEventListener('touchstart', handleInteract as EventListener, { passive: true });
     canvas.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -448,7 +467,9 @@ export const CyberRain: React.FC<CyberRainProps> = ({
     animationFrameId = requestAnimationFrame(render);
 
     return () => {
-      window.removeEventListener('resize', resize);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', debouncedResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       canvas.removeEventListener('click', handleInteract);
       canvas.removeEventListener('touchstart', handleInteract as EventListener);
       canvas.removeEventListener('mousemove', handleMouseMove);

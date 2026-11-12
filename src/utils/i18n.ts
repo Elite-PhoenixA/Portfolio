@@ -39,6 +39,52 @@ export const LANGUAGES: LanguageOption[] = [
   },
 ];
 
+export interface ThemeOption {
+  id: 'amber' | 'cyber' | 'aurora' | 'obsidian' | 'emerald';
+  name: { vi: string; en: string; zh: string; tw: string };
+  color: string;
+  glow: string;
+  desc: { vi: string; en: string; zh: string; tw: string };
+}
+
+export const THEME_OPTIONS: ThemeOption[] = [
+  {
+    id: 'amber',
+    name: { vi: 'Thái Dương Kim', en: 'Solar Amber Gold', zh: '太阳金芒', tw: '太陽金芒' },
+    color: '#d4b870',
+    glow: 'rgba(212, 184, 112, 0.45)',
+    desc: { vi: 'Vàng Hoàng Kim Đế Vương & Ánh Dương', en: 'Imperial Golden Sun & Codex', zh: '拉神烈阳金芒与经典古籍', tw: '拉神烈陽金芒與經典古籍' },
+  },
+  {
+    id: 'cyber',
+    name: { vi: 'Lam Quang Điện', en: 'Cyan Cyber Pulse', zh: '赛博青蓝', tw: '賽博青藍' },
+    color: '#22d3ee',
+    glow: 'rgba(6, 182, 212, 0.45)',
+    desc: { vi: 'Sóng ánh sáng Neon & Giao thoa số', en: 'Futuristic Neon Blue & Matrix', zh: '极速未来霓虹与多维矩阵', tw: '極速未來霓虹與多維矩陣' },
+  },
+  {
+    id: 'aurora',
+    name: { vi: 'Cực Quang Lục', en: 'Aurora Emerald', zh: '极光流碧', tw: '極光流碧' },
+    color: '#35ff9c',
+    glow: 'rgba(53, 255, 156, 0.45)',
+    desc: { vi: 'Dải cực quang phương Bắc huyền diệu', en: 'Mystic Northern Lights Stream', zh: '灵动北极光束与自然律动', tw: '靈動北極光束與自然律動' },
+  },
+  {
+    id: 'obsidian',
+    name: { vi: 'Hư Không Tử', en: 'Obsidian Void', zh: '黑曜紫境', tw: '黑曜紫境' },
+    color: '#c084fc',
+    glow: 'rgba(168, 85, 247, 0.45)',
+    desc: { vi: 'Sấm chớp neon tím & Chiều không gian sâu', en: 'Deep Violet Storm & Dark Cosmos', zh: '深邃黑曜虚空与炽紫雷暴', tw: '深邃黑曜虛空與熾紫雷暴' },
+  },
+  {
+    id: 'emerald',
+    name: { vi: 'Bích Ngọc Ma Trận', en: 'Deep Matrix Jade', zh: '翡翠矩阵', tw: '翡翠矩陣' },
+    color: '#34d399',
+    glow: 'rgba(16, 185, 129, 0.45)',
+    desc: { vi: 'Sắc ngọc lục bảo ma trận truyền thống', en: 'Classic Terminal Jade Aesthetics', zh: '纯粹极客绿境与终端代码', tw: '純粹極客綠境與終端程式碼' },
+  },
+];
+
 export function getLocalized<T>(
   data: { vi: T; en: T; zh?: T; tw?: T } | undefined,
   lang: Language,
@@ -62,6 +108,8 @@ export const UI_TRANSLATIONS = {
     contact: { vi: 'Liên hệ', en: 'Contact', zh: '联系合作', tw: '聯絡合作' },
     resume: { vi: 'Hồ sơ CV', en: 'Resume', zh: '个人简历', tw: '個人簡歷' },
     cyberRain: { vi: 'Hiệu ứng ma trận', en: 'Cyber Rain', zh: '数字雨特效', tw: '數位雨特效' },
+    theme: { vi: 'Chủ đề màu sắc', en: 'Theme Mood', zh: '主题调色', tw: '主題調色' },
+    sound: { vi: 'Âm thanh vi chạm', en: 'Audio FX', zh: '交互音效', tw: '互動音效' },
   },
   hero: {
     filiusSolis: {
@@ -191,6 +239,24 @@ export const UI_TRANSLATIONS = {
     filterAll: { vi: 'Tất cả thành viên', en: 'All Members', zh: '全体成员', tw: '全體成員' },
     filterLead: { vi: 'Core Lead', en: 'Core Lead', zh: '核心领队', tw: '核心領隊' },
     filterSpecialist: { vi: 'Specialist', en: 'Specialists', zh: '领域专家', tw: '領域專家' },
+    activeOps: { vi: 'ĐANG VẬN HÀNH', en: 'ACTIVE OPS', zh: '全天候运行', tw: '全天候運行' },
+    communion: { vi: 'GIAO TIẾP · COMMUNION', en: 'COMMUNION · REACH OUT', zh: '共鸣连接 · COMMUNION', tw: '共鳴連結 · COMMUNION' },
+    exploreCodex: { vi: 'HỒ SƠ · CODEX', en: 'CODEX', zh: '典籍 · CODEX', tw: '典籍 · CODEX' },
+    missionTitle: { vi: 'HỒ SƠ & SỨ MỆNH', en: 'CODEX & DISCIPLINE', zh: '使徒使命与生平', tw: '使徒使命與生平' },
+    coreWeapons: { vi: 'VŨ KHÍ THUẬT TOÁN', en: 'CORE WEAPONS & TECH', zh: '核心算法武器', tw: '核心演算法武器' },
+    closeBtn: { vi: 'ĐÓNG · CLAUDERE', en: 'CLOSE', zh: '关闭 · 闭合', tw: '關閉 · 閉合' },
+    coreLeadBadge: { vi: 'Core Lead', en: 'Core Lead', zh: '核心领队', tw: '核心領隊' },
+    adeptBadge: { vi: 'Adept', en: 'Adept', zh: '专家使徒', tw: '專家使徒' },
+    statMembers: { vi: '3 Thành Viên Cốt Lõi', en: '3 Core Adepts', zh: '3 位核心使徒', tw: '3 位核心使徒' },
+    statWorks: { vi: 'Công Trình Đã Hoàn Thành', en: 'Shipped Works', zh: '已交付精工巨作', tw: '已交付精工巨作' },
+    statUptime: { vi: 'Độ Bền Vững Hệ Thống', en: 'System Availability', zh: '系统稳定可用率', tw: '系統穩定可用率' },
+    statPurity: { vi: 'Chuẩn Mực Tinh Hoa', en: 'Veritas & Purity', zh: '纯粹真理准则', tw: '純粹真理準則' },
+    thePathsDesc: { 
+      vi: 'Ba vị trí kỹ sư tương ứng với ba con đường tinh thông công nghệ', 
+      en: 'Three master adepts wielding distinct paths of the technological arts', 
+      zh: '三位核心大师各执一脉，融汇技术与设计之道', 
+      tw: '三位核心大師各執一脈，融匯技術與設計之道' 
+    },
     cyberRainModes: {
       hybrid: { vi: '⚡ HYBRID STORM (VÀNG + ĐỎ TẬN THẾ)', en: '⚡ HYBRID STORM (GOLD + RED APOCALYPSE)', zh: '⚡ 混合双层数码风暴 (金芒 + 末日赤雨)', tw: '⚡ 混合雙層數碼風暴 (金芒 + 末日赤雨)' },
       redhat: { vi: '🔴 RED HAT SECURITY (MƯA ĐỎ + SẤM CHỚP + TIA LỬA)', en: '🔴 RED HAT APOCALYPSE (RED RAIN + LIGHTNING + EMBERS)', zh: '🔴 红帽末日赤雨 (赤色字符 + 炽红闪电 + 火星飞扬)', tw: '🔴 紅帽末日赤雨 (赤色字符 + 熾紅閃電 + 火星飛揚)' },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Github, 
@@ -12,6 +12,7 @@ import {
   Zap,
   Flame,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { Language, TeamMember } from '../types';
 import { TEAM_DATA, TEAM_INFO } from '../data/portfolioData';
@@ -28,6 +29,23 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
   const [filter, setFilter] = useState<'all' | 'lead' | 'specialist'>('all');
   const [rainMode, setRainMode] = useState<TeamRainMode>('hybrid');
 
+  // Lock body scroll and listen for Escape key when member codex modal is open
+  useEffect(() => {
+    if (!selectedMember) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedMember(null);
+      }
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedMember]);
+
   const filteredMembers = TEAM_DATA.filter((member) => {
     if (filter === 'lead') return member.highlight;
     if (filter === 'specialist') return !member.highlight;
@@ -35,24 +53,15 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
   });
 
   const getActiveOpsLabel = () => {
-    if (lang === 'vi') return 'ĐANG VẬN HÀNH';
-    if (lang === 'zh') return '全天候运行';
-    if (lang === 'tw') return '全天候運行';
-    return 'ACTIVE OPS';
+    return UI_TRANSLATIONS.team.activeOps[lang] || UI_TRANSLATIONS.team.activeOps.en;
   };
 
   const getCommunionLabel = () => {
-    if (lang === 'vi') return 'GIAO TIẾP · COMMUNION';
-    if (lang === 'zh') return '共鸣连接 · COMMUNION';
-    if (lang === 'tw') return '共鳴連結 · COMMUNION';
-    return 'COMMUNION';
+    return UI_TRANSLATIONS.team.communion[lang] || UI_TRANSLATIONS.team.communion.en;
   };
 
   const getExploreLabel = () => {
-    if (lang === 'vi') return 'KHÁM PHÁ';
-    if (lang === 'zh') return '典籍';
-    if (lang === 'tw') return '典籍';
-    return 'CODEX';
+    return UI_TRANSLATIONS.team.exploreCodex[lang] || UI_TRANSLATIONS.team.exploreCodex.en;
   };
 
   return (
@@ -61,21 +70,30 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
       <div 
         className="absolute -inset-x-6 sm:-inset-x-16 -inset-y-16 -z-10 overflow-hidden pointer-events-none"
         style={{
-          maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          maskImage: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.65) 20%, black 30%, black 70%, rgba(0,0,0,0.65) 80%, rgba(0,0,0,0.15) 92%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.65) 20%, black 30%, black 70%, rgba(0,0,0,0.65) 80%, rgba(0,0,0,0.15) 92%, transparent 100%)',
         }}
       >
         <TeamCyberRain mode={rainMode} opacity={0.78} />
       </div>
 
-      {/* Background Ambient Glow Accent */}
+      {/* Balanced Seamless Ambient Glow Accents (Eliminates harsh horizontal color separation) */}
       <div 
-        className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[400px] rounded-full blur-[180px] -z-10 pointer-events-none transition-colors duration-700 ${
+        className={`absolute top-[22%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[520px] rounded-full blur-[190px] -z-10 pointer-events-none transition-colors duration-700 ${
           rainMode === 'redhat' 
             ? 'bg-[#ff0022]/12' 
             : rainMode === 'hybrid' 
             ? 'bg-[#ff2200]/10' 
             : 'bg-[#d4b870]/8'
+        }`} 
+      />
+      <div 
+        className={`absolute top-[65%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full blur-[210px] -z-10 pointer-events-none transition-colors duration-700 opacity-70 ${
+          rainMode === 'redhat' 
+            ? 'bg-[#ff0022]/10' 
+            : rainMode === 'hybrid' 
+            ? 'bg-[#ff2200]/8' 
+            : 'bg-[#d4b870]/6'
         }`} 
       />
 
@@ -110,21 +128,22 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
         </p>
 
         {/* Cyber Rain Multi-Engine Mode Controller (Inherited Skills Rain + Red Hat Security Rain) */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-full bg-black/70 border border-[#d4b870]/30 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 p-1.5 rounded-full bg-black/70 border border-[#d4b870]/30 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
           <button
             onClick={() => {
               setRainMode('hybrid');
               soundEffects.playClick();
             }}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
               rainMode === 'hybrid'
                 ? 'bg-gradient-to-r from-[#d4b870] to-[#ff3333] text-black font-bold shadow-[0_0_15px_rgba(255,60,60,0.4)]'
                 : 'text-[#e8e0c8]/70 hover:text-white hover:bg-white/10'
             }`}
             title="Inherits Skills Cyber Rain + Red Hat Apocalypse Rain simultaneously"
           >
-            <Zap className="w-3.5 h-3.5" />
-            <span>HYBRID STORM (VÀNG + ĐỎ)</span>
+            <Zap className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">{getLocalized(UI_TRANSLATIONS.team.cyberRainModes.hybrid, lang, 'HYBRID STORM')}</span>
+            <span className="sm:hidden">HYBRID</span>
           </button>
 
           <button
@@ -132,15 +151,16 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
               setRainMode('redhat');
               soundEffects.playClick();
             }}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
               rainMode === 'redhat'
                 ? 'bg-gradient-to-r from-[#ff0000] to-[#990000] text-white font-bold shadow-[0_0_15px_rgba(255,0,0,0.6)] border border-[#ff4444]'
                 : 'text-[#e8e0c8]/70 hover:text-[#ff4444] hover:bg-white/10'
             }`}
             title="Red Hat Security: Crimson Katakana Rain, Red Lightning, Fiery Embers, Red Alert"
           >
-            <Flame className="w-3.5 h-3.5 text-[#ff4444]" />
-            <span>RED HAT APOCALYPSE</span>
+            <Flame className="w-3.5 h-3.5 text-[#ff4444] shrink-0" />
+            <span className="hidden sm:inline">{getLocalized(UI_TRANSLATIONS.team.cyberRainModes.redhat, lang, 'RED HAT APOCALYPSE')}</span>
+            <span className="sm:hidden">RED HAT</span>
           </button>
 
           <button
@@ -148,15 +168,16 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
               setRainMode('phoenix');
               soundEffects.playClick();
             }}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-['JetBrains_Mono',monospace] tracking-wider transition-all cursor-pointer ${
               rainMode === 'phoenix'
                 ? 'bg-gradient-to-r from-[#f0d98c] to-[#d4b870] text-black font-bold shadow-[0_0_15px_rgba(212,184,112,0.4)]'
                 : 'text-[#e8e0c8]/70 hover:text-[#f0d98c] hover:bg-white/10'
             }`}
             title="Phoenix A Imperial Gold Matrix Rain"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#f0d98c]" />
-            <span>PHOENIX GOLD MATRIX</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#f0d98c] shrink-0" />
+            <span className="hidden sm:inline">{getLocalized(UI_TRANSLATIONS.team.cyberRainModes.phoenix, lang, 'PHOENIX GOLD MATRIX')}</span>
+            <span className="sm:hidden">PHOENIX GOLD</span>
           </button>
         </div>
       </div>
@@ -323,7 +344,7 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 {TEAM_INFO.stats.membersCount}
               </span>
               <span className="text-[10px] font-['Cinzel',serif] text-[#8a8270] uppercase tracking-wider mt-1">
-                {lang === 'vi' ? '3 Thành Viên Cốt Lõi' : lang === 'zh' || lang === 'tw' ? '3 位核心使徒' : '3 Core Adepts'}
+                {UI_TRANSLATIONS.team.statMembers[lang] || UI_TRANSLATIONS.team.statMembers.en}
               </span>
             </div>
 
@@ -332,7 +353,7 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 {TEAM_INFO.stats.completedProjects}+
               </span>
               <span className="text-[10px] font-['Cinzel',serif] text-[#8a8270] uppercase tracking-wider mt-1">
-                {lang === 'vi' ? 'Công Trình Đã Hoàn Thành' : lang === 'zh' || lang === 'tw' ? '已交付精工巨作' : 'Shipped Works'}
+                {UI_TRANSLATIONS.team.statWorks[lang] || UI_TRANSLATIONS.team.statWorks.en}
               </span>
             </div>
 
@@ -341,7 +362,7 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 {TEAM_INFO.stats.uptimePercentage}
               </span>
               <span className="text-[10px] font-['Cinzel',serif] text-[#8a8270] uppercase tracking-wider mt-1">
-                {lang === 'vi' ? 'Độ Bền Vững Hệ Thống' : lang === 'zh' || lang === 'tw' ? '系统稳定可用率' : 'System Availability'}
+                {UI_TRANSLATIONS.team.statUptime[lang] || UI_TRANSLATIONS.team.statUptime.en}
               </span>
             </div>
 
@@ -350,7 +371,7 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 100%
               </span>
               <span className="text-[10px] font-['Cinzel',serif] text-[#8a8270] uppercase tracking-wider mt-1">
-                {lang === 'vi' ? 'Chuẩn Mực Tinh Hoa' : lang === 'zh' || lang === 'tw' ? '纯粹真理准则' : 'Veritas & Purity'}
+                {UI_TRANSLATIONS.team.statPurity[lang] || UI_TRANSLATIONS.team.statPurity.en}
               </span>
             </div>
           </div>
@@ -628,14 +649,23 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-lg rounded-sm p-6 sm:p-8 bg-[#0a0a0a] border border-[#d4b870]/40 shadow-[0_0_40px_rgba(212,184,112,0.25)] z-10 max-h-[90vh] overflow-y-auto"
             >
+              {/* Close Button X (Sticky top-right) */}
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-full text-white/70 hover:text-white bg-white/10 hover:bg-[#d4b870]/20 border border-[#d4b870]/30 transition-all cursor-pointer z-20"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
               {/* Corner accents */}
               <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#f0d98c]" />
               <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#f0d98c]" />
               <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#f0d98c]" />
               <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#f0d98c]" />
 
-              <div className="flex items-start gap-5 mb-6">
-                <div className="relative w-20 h-20 p-1 border border-[#d4b870] bg-black">
+              <div className="flex items-start gap-4 sm:gap-5 mb-6 pr-6">
+                <div className="relative w-18 h-18 sm:w-20 sm:h-20 p-1 border border-[#d4b870] bg-black shrink-0">
                   <img
                     src={selectedMember.avatar}
                     alt={selectedMember.name}
@@ -644,13 +674,13 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                   />
                 </div>
                 <div>
-                  <span className="text-xs font-['JetBrains_Mono',monospace] text-[#d4b870] uppercase">
+                  <span className="text-[11px] font-['JetBrains_Mono',monospace] text-[#d4b870] uppercase">
                     {selectedMember.pathName ? getLocalized(selectedMember.pathName, lang, selectedMember.pathName.en) : 'THE PATH'}
                   </span>
-                  <h3 className="text-2xl font-normal text-[#f0d98c] font-['Cinzel',serif] tracking-[0.08em]">
+                  <h3 className="text-xl sm:text-2xl font-normal text-[#f0d98c] font-['Cinzel',serif] tracking-[0.08em]">
                     @{selectedMember.name}
                   </h3>
-                  <p className="text-sm italic text-[#d4b870] mt-0.5">
+                  <p className="text-xs sm:text-sm italic text-[#d4b870] mt-0.5">
                     {getLocalized(selectedMember.role, lang, selectedMember.role.en)}
                   </p>
                   <p className="text-xs text-[#8a8270] mt-0.5">
@@ -664,7 +694,7 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 <div className="p-4 rounded-sm bg-black/60 border border-[#d4b870]/20">
                   <div className="text-[11px] uppercase font-['Cinzel',serif] text-[#d4b870] tracking-widest mb-1.5 flex items-center gap-1.5">
                     <Terminal className="w-3.5 h-3.5 text-[#d4b870]" />
-                    {lang === 'vi' ? 'HỒ SƠ & SỨ MỆNH' : lang === 'zh' || lang === 'tw' ? '使徒使命与生平' : 'CODEX & DISCIPLINE'}
+                    {UI_TRANSLATIONS.team.missionTitle[lang] || 'CODEX & DISCIPLINE'}
                   </div>
                   <p className="text-sm text-[#e8e0c8]/85 leading-relaxed font-['Cormorant_Garamond',serif]">
                     {getLocalized(selectedMember.bio, lang, selectedMember.bio.en)}
@@ -674,13 +704,13 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
                 <div className="p-4 rounded-sm bg-black/60 border border-[#d4b870]/20">
                   <div className="text-[11px] uppercase font-['Cinzel',serif] text-[#d4b870] tracking-widest mb-2 flex items-center gap-1.5">
                     <Cpu className="w-3.5 h-3.5 text-[#d4b870]" />
-                    {lang === 'vi' ? 'VŨ KHÍ THUẬT TOÁN' : lang === 'zh' || lang === 'tw' ? '核心算法武器' : 'CORE WEAPONS & TECH'}
+                    {UI_TRANSLATIONS.team.coreWeapons[lang] || 'CORE WEAPONS & TECH'}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {selectedMember.coreSkills.map((skill, sIdx) => (
                       <span
                         key={sIdx}
-                        className="px-3 py-1 text-xs font-['JetBrains_Mono',monospace] bg-black text-[#f0d98c] border border-[#d4b870]/40"
+                        className="px-2.5 sm:px-3 py-1 text-xs font-['JetBrains_Mono',monospace] bg-black text-[#f0d98c] border border-[#d4b870]/40"
                       >
                         {skill}
                       </span>
@@ -724,9 +754,9 @@ export const Team: React.FC<TeamProps> = ({ lang }) => {
 
                 <button
                   onClick={() => setSelectedMember(null)}
-                  className="px-5 py-2 font-['Cinzel',serif] tracking-wider bg-gradient-to-r from-[#d4b870] to-[#f0d98c] text-[#0a0a0a] font-bold text-xs hover:brightness-110 transition-all"
+                  className="px-5 py-2 font-['Cinzel',serif] tracking-wider bg-gradient-to-r from-[#d4b870] to-[#f0d98c] text-[#0a0a0a] font-bold text-xs hover:brightness-110 transition-all cursor-pointer"
                 >
-                  {lang === 'vi' ? 'ĐÓNG · CLAUDERE' : lang === 'zh' || lang === 'tw' ? '关闭 · 闭合' : 'CLOSE'}
+                  {UI_TRANSLATIONS.team.closeBtn[lang] || 'CLOSE'}
                 </button>
               </div>
             </motion.div>
